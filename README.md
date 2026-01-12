@@ -20,7 +20,7 @@ Il progetto prevede la realizzazione di un sistema composto da:
 4. **Infrastruttura di rete** per collegare arnie/device e server in modo affidabile e sicuro.
 5. **Web app mobile (smartphone)** per visualizzare dati e configurare parametri di registrazione.
 
-> Il progetto accompagna tutto l’anno scolastico e si integra con le materie di indirizzo (Informatica, Sistemi e Reti, TPSIT, Gestione Progetto).
+> Il progetto si integra con le materie di indirizzo (Informatica, Sistemi e Reti, TPSIT, Gestione Progetto).
 
 ---
 
