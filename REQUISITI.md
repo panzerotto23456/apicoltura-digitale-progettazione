@@ -190,6 +190,9 @@ Perché è meglio? Perché ora sappiamo **quanto spesso**, **dove finisce il dat
 - **RF-SW-33 — TC, Attivazione Manuale**: L'apicoltore può attivare la telecamera tramite l'applicazione.
 - **RF-SW-34 — TC, Attivazione Automatica**: La telecamera si attiva automaticamente quando la luminosità supera il 20%.
 - **RF-SW-35 — TC, Timestamp**: Ad ogni invio di video è associata la data e l'ora di registrazione (formato dd/MM/yyyy; hh:mm).
+- **RF-SW-36, Taratura Generale e Manuale**: I sensori devono essere tarati manualmente dall'Utente.
+- **RF-SW-37, Valore soglia dinamico**: Leggere dal database i valori di soglia dove possono essere anche modificabili.
+- **RF-SW-38, Scliere il DeepSleep da utilizzare **: Esistono vari tipi di DeepSleep ma solo uno è adatto.
 
 # Requisiti Non Funzionali
 
