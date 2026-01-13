@@ -162,9 +162,9 @@ Perché è meglio? Perché ora sappiamo **quanto spesso**, **dove finisce il dat
 - **RF-SW-07 — TM, Frequenza di Aggiornamento**: Il sensore aggiorna la misurazione ogni 6 minuti.
 
 ### Requisiti non funzionali
-- **RNF-01 — TM, Persistenza Dati**: Il sensore salva i dati nella memoria locale dell'ESP32 in caso di assenza di connessione.
-- **RNF-02 — TM, Robustezza Ambientale**: Il sensore deve resistere a polvere, propoli e sporco.
-- **RNF-03 — TM, Facilità di Installazione**: Il sensore deve essere installato rapidamente senza disturbare le api.
+- **RNF-SW-01 — TM, Persistenza Dati**: Il sensore salva i dati nella memoria locale dell'ESP32 in caso di assenza di connessione.
+- **RNF-SW-02 — TM, Robustezza Ambientale**: Il sensore deve resistere a polvere, propoli e sporco.
+- **RNF-SW-03 — TM, Facilità di Installazione**: Il sensore deve essere installato rapidamente senza disturbare le api.
 
 📎 Media consigliati:
 - Diagramma “REST API model” (per spiegare GET/POST e flusso dati).
