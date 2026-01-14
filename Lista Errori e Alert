@@ -1,1 +1,18 @@
+**Elenco Ordinato delle Operazioni del Sistema:**
 
+### **1.0 Ciclo di Misurazione e Acquisizione (start)**
+
+- **1.1 Acquisizione Dati: Lettura del valore della temperatura (float, °C) e generazione del Timestamp (RF-SW-01, RF-SW-02).**
+- **1.2 Verifica Integrità Dato: Controllo se il dato è nullo.**
+- **1.3 Verifica Range Sensore: Controllo se il dato è fuori range.**
+- **1.4 Verifica Integrità Sensore: Controllo se il sensore è offline.**
+- **1.5 Salvataggio su Memoria Locale: Se il dato è valido, memorizzazione permanente su ESP32 (RNF-SW-01).**
+- **1.6 Verifica Connettività Database: Controllo della disponibilità della rete e del DB (RNF-SW-01).**
+- **1.7 Sincronizzazione Cloud/DB: Se la connessione è presente, upload del valore e del timestamp (RF-SW-03, RF-SW-04).**
+- **1.8 Controllo Soglia Massima: Verifica se la temperatura è maggiore della SogliaMax (RF-SW-05).**
+- **1.9 Alert Superamento Massimo: Invio notifica di allerta per temperatura critica elevata.**
+- **1.10 Controllo Soglia Minima: Verifica se la temperatura è inferiore alla SogliaMin (RF-SW-06).**
+- **1.11 Alert Superamento Minimo: Invio notifica di allerta per temperatura critica bassa.**
+- **1.12 Intervallo di Campionamento: Attesa controllata di 6 minuti (RF-SW-07).**
+- **1.13 Tentativo di Ripristino Dati: Se la connessione torna disponibile, tentativo di upload dei dati locali accumulati (RNF-SW-01).**
+- **1.14 Chiusura Loop: Rinvio dell'esecuzione all'inizio del ciclo di misurazione.**
