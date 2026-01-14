@@ -250,33 +250,105 @@ Perché è meglio? Perché ora sappiamo **quanto spesso**, **dove finisce il dat
 ## Gruppo C — ESP32-CAM: logica software + comunicazione REST
 > Obiettivo: definire **come** il device gestisce dati, errori, rete instabile, buffering, formato messaggi.
 
-### Requisiti funzionali (esempi)
+# Requisiti Funzionali
 
-- **RF-SW-01 — Ciclo acquisizione**: Il firmware deve acquisire le misure con una frequenza configurabile (es. temperatura ogni 60s; peso ogni 5 min; audio come “indicatori” aggregati).
+- **RF-SW-01 — TM, Temperatura Interna**: Il sensore misura la temperatura interna dell'arnia. 
+- **RF-SW-02 — TM, Unità di Misura**: Il sensore misura la temperatura in gradi Celsius (°C).
+- **RF-SW-03 — TM, Tipo di Dato**: Il valore del sensore è ospitato in una variabile di tipo float.
+- **RF-SW-04 — TM, Timestamp**: Ad ogni misurazione è associata la data e l'ora di esecuzione (formato dd/MM/yyyy; hh:mm).
+- **RF-SW-05 — TM, Alert Soglia Massima**: Al superamento della temperatura di 37 °C, il sistema invia un alert. 
+- **RF-SW-06 — TM, Alert Soglia Minima**: Al raggiungimento della temperatura di 30 °C, il sistema invia un alert.
+- **RF-SW-07 — TM, Frequenza di Aggiornamento**: Il sensore aggiorna la misurazione ogni 6 minuti.
+- **RF-SW-08 — PS, Misurazione**:  Il segnale analogico deve essere acquisito e convertito in valore digitale a 24 bit. 
+- **RF-SW-09 — PS, Taratura**:  La funzione di taratura deve esistere per fare la differenza dei pesi.
+- **RF-SW-10 — PS, Trasforma dato grezzo**: Il valore grezzo deve essere trasformato in kg.
+- **RF-SW-11 — PS, Power Management**: La modalità deep sleep viene disattivata ogni 3 ore.
+- **RF-SW-12 — PS, Gestione Data**: Ad ogni misurazione deve essere associata una data.
+- **RF-SW-13 — PS, Gestione ora**: Ad ogni misurazione deve essere associata un orario. 
+- **RF-SW-14 — MIC, Acquisizione continua**: Il microfono deve acquisire il segnale a intervalli di 10 secondi.
+- **RF-SW-15 — MIC, Intensità suono**: Si calcola il volume medio in dB per capire l'agitazione dello sciame.
+- **RF-SW-16 — MIC, Frequenza suono**: Si calcola la frequenza per avere una misura più precisa dello stato dello sciame.
+- **RF-SW-17 — MIC, Verifica soglia**:  Il microfono confronta i valori rilevati con valori di allarme.
+- **RF-SW-18 — MIC, Notifica alert**: Se si supera una certa soglia l'apicoltore riceve una notifica.
+- **RF-SW-19 — UM, Misurazione umidità come % nell'aria**: Il sensore misura la percentuale di umidità all'interno dell'arnia.
+- **RF-SW-20 — UM, Tipo di dato**: Il valore del sensore è ospitato in una variabile float. 
+- **RF-SW-21 — UM, Timestamp**: Ad ogni misurazione è associata la data e l'ora di esecuzione (formato dd/MM/yyyy; hh:mm).
+- **RF-SW-22 — UM, Alert Soglia Massima**: Al superamento della soglia di umidità del 70% il sistema invia un alert. 
+- **RF-SW-23 — UM, Alert Soglia Minima**: Al raggiungimento della soglia di umidità inferiore del 40% il sistema invia un alert. 
+- **RF-SW-24 — UM, Frequenza di Aggiornamento**: Il sensore aggiorna la misurazione ogni 6 minuti. 
+- **RF-SW-25 — SA, Misurazione Livello Acqua**: Il sensore misura il livello dell'acqua nel secchio in percentuale.
+- **RF-SW-26 — SA, Tipo di Dato**: Il valore del sensore è ospitato in una variabile di tipo float.
+- **RF-SW-27 — SA, Timestamp**: Ad ogni misurazione è associata la data e l'ora di esecuzione (formato dd/MM/yyyy; hh:mm).
+- **RF-SW-28 — SA, Alert Soglia Massima**: Al superamento della soglia massima del secchio il sistema invia un alert. 
+- **RF-SW-29 — SA, Alert Soglia Minima**: Al raggiungimento del livello inferiore al 5% il sistema invia un alert. 
+- **RF-SW-30 — SA, Frequenza di Aggiornamento**: Il sensore aggiorna la misurazione ogni 40 minuti.
+- **RF-SW-31 — SA, Taratura**: Il sensore deve essere tarato salvando il livello più basso e più alto durante il riempimento. 
+- **RF-SW-32 — TC, Registrazione Video**: La telecamera registra video da inviare al database ogni minuto.
+- **RF-SW-33 — TC, Attivazione Manuale**: L'apicoltore può attivare la telecamera tramite l'applicazione.
+- **RF-SW-34 — TC, Attivazione Automatica**: La telecamera si attiva automaticamente quando la luminosità supera il 20%.
+- **RF-SW-35 — TC, Timestamp**: Ad ogni invio di video è associata la data e l'ora di registrazione (formato dd/MM/yyyy; hh:mm).
+- **RF-SW-36, Funzione di Lettura**: I sensori devono essere tarati manualmente dall'Utente quindi prendere le informazioni dal Database, inclusa la data.
+- **RF-SW-37, Funzione di Scrittura**: Scrivere la funzione inviaDatiAlServer() che prende tutti i valori e li spedisce.
+- **RF-SW-38, Struttura il JSON**: Definire come sarà il messaggio da inviare al database. Esempio: {"temp": 32.5, "peso": 45.2, "hum": 60, "alert_temp": false ...}
+- **RF-SW-39, Gestione DeepSleep**: Decidere quale modalità di risparmio energetico usare (RF-SW-38) per non spegnere il Wi-Fi mentre i sensori devono ancora inviare i dati.
+- **RF-SW-40, Creazione di una Documentazione**, creare un documento in grado di raccontare e spiegare l'intero progetto
+- **RF-SW-41, Tabella dei Pin**, aggiornare la documentazione continuamente con il numero di pin prestabiliti per comunicare con gli altri gruppi
+- **RF-SW-42, Registro Requisiti**, aggiornare il registro requisiti man mano che viene scritto il codice o si presentano problemi
+- **RF-SW-43, Informazioni codice**, commentare approfonditamente il codice e descriverlo minuziosamente
 
-### Requisiti non funzionali (esempi)
+# Requisiti Non Funzionali
 
-- **RNF-SW-01 — Robustezza**: In caso di crash, il device deve ripartire automaticamente e non perdere più delle ultime N misure in buffer.
-
-📎 Media consigliati:
-- Diagramma “REST API model” (per spiegare GET/POST e flusso dati).
-- Schema a blocchi: sensori → firmware → rete → server → database.
-
---- 
+- **RNF-SW-01 — TM, Persistenza Dati**: Il sensore salva i dati nella memoria locale dell'ESP32 in caso di assenza di connessione
+- **RNF-SW-04 — PS, Peso max**: L'arnia pesa al massimo 80kg. 
+- **RNF-SW-05 — PS, Notifica peso alto**: L'apicoltore deve ricevere un alert se il peso è troppo alto. 
+- **RNF-SW-06 — PS, Notifica peso basso**: L'apicoltore deve ricevere un alert se il peso è troppo basso.
+- **RNF-SW-07 — PS, Latenza**: Il sensore impiega circa 2 secondi per misurare dopo l'accensione.
+- **RNF-SW-08 — MIC, Tempestività alert**:  La notifica alert deve arrivare all'apicoltore in un tempo ragionevole.
+- **RNF-SW-09 — UM, Persistenza Dati**: Il sensore salva i dati nella memoria locale dell'ESP32 in caso di assenza di connessione.
+- **RNF-SW-13 — SA, Connettività**: Il sensore richiede connessione di rete costante per l'invio dei dati al database.
+- **RNF-SW-19 — TC, Connettività**: La telecamera richiede connessione di rete costante per l'invio dei video al database.
+  
+---
 
 ## Gruppo D — Architettura di rete e infrastruttura (server, sicurezza, connettività)
 > Obiettivo: definire come “parlano” tra loro device, server e interfaccia web (e con quali garanzie).
 
-### Requisiti funzionali (esempi)
+### Requisiti funzionali
 
-- **RF-NET-01 — Connettività device**: Il device deve potersi connettere alla rete dell’apiario (Wi‑Fi locale o hotspot dedicato) per raggiungere il server REST.
+-   **RF-NET-01 — Router dedicato all’apiario**:  
+    Deve essere utilizzato un router adeguato per ambienti esterni(67/68) e connessioni M2M/IoT (es. router STRONG o equivalente), in grado di garantire stabilità di connessione e gestione remota.
+    
+-   **RF-NET-02— Scelta del gestore di rete**:  
+    Il gestore di connettività deve essere selezionato in base alla copertura reale nella zona dell’apiario, verificata tramite test sul campo (es. test di segnale e velocità).
+    
+-   **RF-NET-03— Trasmissione dati automatica**:  
+    Il sistema deve trasmettere i dati raccolti dall’arnia al server senza intervento manuale dell’utente.
+    
+-   **RF-NET-04 — Ridotta necessità di manutenzione**:  
+    L’architettura di rete deve essere progettata per richiedere il minimo intervento di manutenzione ordinaria da parte dell’apicoltore.
+    
 
-### Requisiti non funzionali (esempi)
+----------
 
-- **RNF-NET-01 — Disponibilità**: Il servizio deve essere disponibile in orario di lavoro dell’apicoltore (definire fascia e downtime massimo).
+### Requisiti non funzionali
 
-📎 Media consigliati:
-- Un semplice diagramma rete (apiario → internet → VPS/server → smartphone).
+-   **RNF-NET-01 — Alimentazione autonoma**:  
+    Il sistema di rete (router e device) deve essere alimentato tramite batteria integrata, alloggiata in un box di plastica idrorepellente per la protezione dagli agenti atmosferici.
+    
+-   **RNF-NET-02 — Energia rinnovabile**:  
+    Deve essere previsto un pannello solare posizionato in modo strategico per massimizzare l’esposizione alla luce solare e garantire la ricarica continua della batteria.
+    
+-   **RNF-NET-03 — Continuità operativa senza rete elettrica**:  
+    In assenza di alimentazione elettrica, il router e i dispositivi devono continuare a funzionare esclusivamente tramite pannello solare e batteria.
+    
+-   **RNF-NET-04 — Efficienza energetica**:  
+    Il consumo energetico mensile dell’intero sistema deve essere minimo e compatibile con l’alimentazione solare prevista.
+    
+-   **RNF-NET-05 — Resistenza ambientale**:  
+    I componenti devono operare correttamente in presenza di variazioni di temperatura e umidità, riducendo il rischio di ossidazione e degrado dei materiali.
+    
+-   **RNF-NET-06 — Calcolo e monitoraggio dei consumi**:  
+    Deve essere effettuato un calcolo preventivo del consumo energetico complessivo del sistema per garantire l’autonomia richiesta e il corretto dimensionamento di batteria e pannello solare.
 
 ---
 
