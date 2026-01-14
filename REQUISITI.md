@@ -239,19 +239,26 @@ Perché è meglio? Perché ora sappiamo **quanto spesso**, **dove finisce il dat
 
 > Obiettivo: strutturare i dati in modo che siano consultabili, confrontabili e “puliti”.
 
-  
+### Requisiti funzionali
+- **RF-DB-01 — Anagrafiche**: Il database deve gestire le entità: `Apiario`, `Arnia`, `Sensore`, `Notifica`, `Rilevazione`, `Utente`.  
+- **RF-DB-02 — Tipo utente**: Devono esistere diversi tipi di utente: `Admin`, `Apicoltore`.
+- **RF-DB-03 — Dati del database**: Il database deve ricevere i dati:
+-- Rumore (dB)
+-- Peso (kg)
+-- Temperatura (°C)
+-- Umidità (%)
+-- Entrata (bmp)
+-- Livello acqua (%)
+- **RF-DB-04 — Filtri e Statistiche**: Aggiungere filtri e statistiche varie.
+- **RF-DB-05 — Apiari**: Gestire più apiari.
+- **RF-DB-06 — Arnie**:  Collegare più arnie ad un apiario.
 
-### Requisiti funzionali (esempi)
-
-- **RF-DB-01 — Anagrafiche**: Il database deve gestire le entità: `Apiario`, `Arnia`, `Sensore`, `Misura`, `Allarme`, `Utente`.
-
-  
-
-### Requisiti non funzionali (esempi)
-
-- **RNF-DB-01 — Retention**: Lo storico misure deve essere conservato per almeno 12 mesi.
-
-  
+### Requisiti non funzionali
+- **RNF-DB-01 — Retention**: Lo storico misure deve essere conservato per almeno 2 mesi.  
+- **RNF-DB-02 — Misurazione**: Avere misurazioni su richiesta.
+- **RNF-DB-03 — Notifica**: Identificare e segnalare problemi o misurazioni con una notifica.
+- **RNF-DB-04 — Backup**: Backup automatici ogni settimana e successivamente fare pulizia.(evoluzione futura)
+- **RNF-DB-05 — Salvataggio**: Salvare nel log gli accessi.(evoluzione futura)
 
 📎 Media consigliati (da inserire nel vostro documento):
 
@@ -269,15 +276,11 @@ Perché è meglio? Perché ora sappiamo **quanto spesso**, **dove finisce il dat
 
 > Obiettivo: definire quali sensori servono, dove metterli, e quali vincoli fisici ci sono (meteo, temperatura, acqua, urti…).
 
-<<<<<<< HEAD
-  
-=======
 ### Requisiti funzionali (esempi)
 **[RF-HW-01 — Peso](DOCUMENTAZIONE%20HARDWARE.md#hx711-rf-hw-01)**: Il device deve misurare il peso dell’arnia per stimare andamento nettare/colonia.  
  - Nota dominio: il peso cresce con nettare e colonia, e diminuisce quando la colonia consuma miele o muore. 
  
 **RF-HW-01 — Monitoraggio Peso e Mielometro** Il device deve misurare il peso totale dell'arnia con una risoluzione minima di 100g e calcolare il guadagno netto giornaliero (funzione mielometro).
->>>>>>> 0703a04f510a89868791ec7a7d60b4804014f5e8
 
 ### Requisiti funzionali (esempi)
 
@@ -319,11 +322,8 @@ Perché è meglio? Perché ora sappiamo **quanto spesso**, **dove finisce il dat
 3.  Predatori: Si possono notare calabroni o vespe che attaccano la colonia.
     
 
-<<<<<<< HEAD
-  
-=======
+
 **[RF-HW-05 — Livello Risorse Idriche](DOCUMENTAZIONE%20HARDWARE.md#hw-038-rf-hw-05)** Il device deve misurare la distanza del pelo libero dell'acqua in un serbatoio esterno (secchio) e convertire il dato in percentuale residua.
->>>>>>> 0703a04f510a89868791ec7a7d60b4804014f5e8
 
   
 
