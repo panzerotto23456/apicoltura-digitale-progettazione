@@ -2,10 +2,43 @@
 // ESP32-CAM - Main Controller Sistema Monitoraggio Arnia
 // ============================================================================
 
+#include <WiFi.h>
 #include "SensorValidation.h"
 
 // ============================================================================
-// DICHIARAZIONE FUNZIONI DEI SENSORI (definite nei file .ino separati)
+// CONFIGURAZIONE DEVICE (da personalizzare per ogni arnia)
+// ============================================================================
+const char* WIFI_SSID = "ARNIA_WIFI";
+const char* WIFI_PASSWORD = "password123";
+
+// Configurazione server REST
+const char* REST_URL = "https://apicoltura-xxxx.restdb.io/rest";
+const char* REST_KEY = "your-api-key-here";
+const int REST_TIMEOUT = 10000;
+
+// ============================================================================
+// VARIABILI DEVICE
+// ============================================================================
+char deviceMacAddress[18] = "";
+
+// ============================================================================
+// DICHIARAZIONE FUNZIONI DATA MANAGER (connection_manager.ino)
+// ============================================================================
+extern void init_data_manager(ServerConfig* config);
+extern bool is_data_manager_ready();
+extern ConfigData fetch_sensor_config(const char* macAddress);
+extern bool save_sensor_data(SensorData* data);
+extern bool save_value(const char* macAddress, const char* tipoSensore,
+                       const char* idSensore, float valore, const char* unita,
+                       unsigned long timestamp, int codiceStato,
+                       bool alert, const char* alertTipo);
+extern bool send_notification(NotificationData* notification);
+extern bool notify(const char* macAddress, const char* tipoSensore,
+                   float valoreRiferimento, unsigned long timestamp,
+                   const char* messaggio, int livello);
+
+// ============================================================================
+// DICHIARAZIONE FUNZIONI DEI SENSORI
 // ============================================================================
 
 // DS18B20 - Temperatura interna
@@ -35,7 +68,7 @@ extern unsigned long get_intervallo_hx711();
 extern bool is_abilitato_hx711();
 
 // ============================================================================
-// TIMING - Ultimo check per ogni sensore
+// TIMING
 // ============================================================================
 unsigned long ultimoCheck_ds18b20 = 0;
 unsigned long ultimoCheck_sht21_humidity = 0;
@@ -45,62 +78,138 @@ unsigned long ultimoCheck_hx711 = 0;
 // ============================================================================
 // STATO SISTEMA
 // ============================================================================
+bool wifiConnesso = false;
 bool configCaricata = false;
 
 // ============================================================================
-// SIMULAZIONE CARICAMENTO CONFIG DA DATABASE
-// TODO: Sostituire con chiamata REST reale a restdb.io
+// GESTIONE WI-FI (specifica del device)
 // ============================================================================
-void caricaConfigDaDatabase() {
-  Serial.println("\n--- CARICAMENTO CONFIGURAZIONE DA DATABASE ---\n");
+void initWiFi() {
+  // Ottieni MAC address
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  snprintf(deviceMacAddress, sizeof(deviceMacAddress), "%02X:%02X:%02X:%02X:%02X:%02X",
+           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-  // TODO: Connessione Wi-Fi e chiamata REST
-  // WiFi.begin(ssid, password);
-  // HTTPClient http;
-  // http.begin("https://xxx.restdb.io/rest/sensori");
-  // ...
+  Serial.print("  MAC Address: ");
+  Serial.println(deviceMacAddress);
 
-  // Config DS18B20 (temperatura interna arnia)
-  SensorConfig config_ds18b20 = {
-    .sogliaMin = 30.0f,
-    .sogliaMax = 37.0f,
-    .intervallo = 360000,  // 6 minuti
-    .abilitato = true
-  };
-  init_ds18b20(&config_ds18b20);
+  WiFi.mode(WIFI_STA);
+}
 
-  // Config SHT21 Umidita
-  SensorConfig config_sht21_humidity = {
-    .sogliaMin = 40.0f,
-    .sogliaMax = 70.0f,
-    .intervallo = 360000,  // 6 minuti
-    .abilitato = true
-  };
-  init_humidity_sht21(&config_sht21_humidity);
+bool connectWiFi() {
+  if (WiFi.status() == WL_CONNECTED) {
+    wifiConnesso = true;
+    return true;
+  }
 
-  // Config SHT21 Temperatura (ambiente esterno)
-  SensorConfig config_sht21_temp = {
-    .sogliaMin = 10.0f,
-    .sogliaMax = 45.0f,
-    .intervallo = 360000,  // 6 minuti
-    .abilitato = true
-  };
-  init_temperature_sht21(&config_sht21_temp);
+  Serial.print("  Connessione a ");
+  Serial.print(WIFI_SSID);
+  Serial.print("...");
 
-  // Config HX711 (peso)
-  SensorConfig config_hx711 = {
-    .sogliaMin = 10.0f,
-    .sogliaMax = 80.0f,
-    .intervallo = 10800000,  // 3 ore
-    .abilitato = true
-  };
-  init_hx711(&config_hx711);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  // Calibrazione peso (da DB o EEPROM)
-  calibrate_hx711(2280.0f, 50000);
+  int tentativi = 0;
+  while (WiFi.status() != WL_CONNECTED && tentativi < 20) {
+    delay(500);
+    Serial.print(".");
+    tentativi++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    wifiConnesso = true;
+    Serial.println(" OK");
+    Serial.print("    IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("    RSSI: ");
+    Serial.print(WiFi.RSSI());
+    Serial.println(" dBm");
+    return true;
+  } else {
+    wifiConnesso = false;
+    Serial.println(" FALLITO");
+    return false;
+  }
+}
+
+bool isWiFiConnected() {
+  wifiConnesso = (WiFi.status() == WL_CONNECTED);
+  return wifiConnesso;
+}
+
+// ============================================================================
+// CARICAMENTO CONFIG DA SERVER
+// ============================================================================
+void caricaConfigDaServer() {
+  Serial.println("\n--- CARICAMENTO CONFIGURAZIONE ---\n");
+
+  if (!isWiFiConnected()) {
+    Serial.println("  ! Wi-Fi non connesso, uso config default");
+  }
+
+  // Fetch config dal server
+  ConfigData config = fetch_sensor_config(deviceMacAddress);
+
+  if (config.success) {
+    Serial.println("  + Config ricevuta dal server");
+  } else {
+    Serial.println("  ! Config non disponibile, uso valori default");
+  }
+
+  // Applica configurazioni ai sensori
+  init_ds18b20(&config.ds18b20);
+  init_humidity_sht21(&config.sht21_humidity);
+  init_temperature_sht21(&config.sht21_temperature);
+  init_hx711(&config.hx711);
+
+  // Calibrazione peso
+  calibrate_hx711(config.calibrationFactor, config.calibrationOffset);
 
   configCaricata = true;
-  Serial.println("\n--- CONFIGURAZIONE CARICATA ---\n");
+  Serial.println("\n--- CONFIGURAZIONE APPLICATA ---\n");
+}
+
+// ============================================================================
+// INVIO DATO SENSORE
+// ============================================================================
+void inviaDatoSensore(const char* tipoSensore, const char* idSensore,
+                      RisultatoValidazione* risultato, const char* unita) {
+
+  if (!isWiFiConnected()) {
+    Serial.println("  ! Wi-Fi non connesso, dato non inviato");
+    // TODO: Salvare in buffer locale
+    return;
+  }
+
+  // Determina alert
+  bool alert = false;
+  const char* alertTipo = "";
+
+  if (risultato->codiceErrore == ALERT_THRESHOLD_HIGH) {
+    alert = true;
+    alertTipo = "HIGH";
+  } else if (risultato->codiceErrore == ALERT_THRESHOLD_LOW) {
+    alert = true;
+    alertTipo = "LOW";
+  }
+
+  // Salva sul server
+  bool salvato = save_value(
+    deviceMacAddress,
+    tipoSensore,
+    idSensore,
+    risultato->valorePulito,
+    unita,
+    millis(),
+    risultato->codiceErrore,
+    alert,
+    alertTipo
+  );
+
+  if (!salvato) {
+    Serial.println("  ! Errore salvataggio dato");
+    // TODO: Salvare in buffer locale
+  }
 }
 
 // ============================================================================
@@ -113,30 +222,45 @@ void setup() {
   Serial.println("\n");
   Serial.println("========================================");
   Serial.println("  SISTEMA MONITORAGGIO ARNIA - PCTO");
-  Serial.println("  Main Controller v2.0");
-  Serial.println("  Architettura Modulare Sensori");
+  Serial.println("  Main Controller v2.2");
   Serial.println("========================================");
   Serial.println();
 
-  // FASE 1: Inizializzazione hardware sensori
-  Serial.println("FASE 1: INIZIALIZZAZIONE HARDWARE\n");
+  // FASE 1: Inizializzazione Wi-Fi (gestione locale)
+  Serial.println("FASE 1: INIZIALIZZAZIONE WI-FI\n");
+  initWiFi();
+
+  if (connectWiFi()) {
+    Serial.println("  + Wi-Fi connesso\n");
+  } else {
+    Serial.println("  ! Wi-Fi non disponibile, modalita' offline\n");
+  }
+
+  // FASE 2: Inizializzazione Data Manager (server REST)
+  Serial.println("FASE 2: INIZIALIZZAZIONE DATA MANAGER\n");
+  ServerConfig serverConfig;
+  strncpy(serverConfig.baseUrl, REST_URL, sizeof(serverConfig.baseUrl) - 1);
+  strncpy(serverConfig.apiKey, REST_KEY, sizeof(serverConfig.apiKey) - 1);
+  serverConfig.timeout = REST_TIMEOUT;
+  init_data_manager(&serverConfig);
+
+  // FASE 3: Inizializzazione hardware sensori
+  Serial.println("\nFASE 3: INIZIALIZZAZIONE HARDWARE\n");
   setup_ds18b20();
   setup_sht21();
   setup_hx711();
-
   Serial.println("+ Tutti i sensori inizializzati\n");
 
-  // FASE 2: Connessione DB e caricamento configurazione
-  // TODO: Implementare connessione Wi-Fi reale
-  Serial.println("FASE 2: CARICAMENTO CONFIGURAZIONE");
-  caricaConfigDaDatabase();
+  // FASE 4: Caricamento configurazione dal server
+  Serial.println("FASE 4: CARICAMENTO CONFIGURAZIONE");
+  caricaConfigDaServer();
 
-  // Stampa intervalli configurati
+  // Stampa intervalli
   Serial.println("Intervalli di campionamento:");
-  Serial.print("  - DS18B20 Temp:    "); Serial.print(get_intervallo_ds18b20() / 1000); Serial.println(" sec");
-  Serial.print("  - SHT21 Humidity:  "); Serial.print(get_intervallo_humidity_sht21() / 1000); Serial.println(" sec");
-  Serial.print("  - SHT21 Temp:      "); Serial.print(get_intervallo_temperature_sht21() / 1000); Serial.println(" sec");
-  Serial.print("  - HX711 Peso:      "); Serial.print(get_intervallo_hx711() / 1000); Serial.println(" sec");
+  Serial.print("  - DS18B20:     "); Serial.print(get_intervallo_ds18b20() / 1000); Serial.println(" sec");
+  Serial.print("  - SHT21 Hum:   "); Serial.print(get_intervallo_humidity_sht21() / 1000); Serial.println(" sec");
+  Serial.print("  - SHT21 Temp:  "); Serial.print(get_intervallo_temperature_sht21() / 1000); Serial.println(" sec");
+  Serial.print("  - HX711:       "); Serial.print(get_intervallo_hx711() / 1000); Serial.println(" sec");
   Serial.println();
 
   Serial.println("========================================");
@@ -162,8 +286,8 @@ void loop() {
     gestisciRisultatoValidazione(risultato);
 
     if (risultato.valido) {
-      // TODO: Invia al database
       Serial.print("  -> Valore: "); Serial.print(risultato.valorePulito); Serial.println(" C");
+      inviaDatoSensore("temperatura_interna", "DS18B20_001", &risultato, "C");
     }
     Serial.println("---\n");
   }
@@ -180,8 +304,8 @@ void loop() {
     gestisciRisultatoValidazione(risultato);
 
     if (risultato.valido) {
-      // TODO: Invia al database
       Serial.print("  -> Valore: "); Serial.print(risultato.valorePulito); Serial.println(" %");
+      inviaDatoSensore("umidita", "SHT21_HUM_001", &risultato, "%");
     }
     Serial.println("---\n");
   }
@@ -198,8 +322,8 @@ void loop() {
     gestisciRisultatoValidazione(risultato);
 
     if (risultato.valido) {
-      // TODO: Invia al database
       Serial.print("  -> Valore: "); Serial.print(risultato.valorePulito); Serial.println(" C");
+      inviaDatoSensore("temperatura_ambiente", "SHT21_TEMP_001", &risultato, "C");
     }
     Serial.println("---\n");
   }
@@ -216,24 +340,26 @@ void loop() {
     gestisciRisultatoValidazione(risultato);
 
     if (risultato.valido) {
-      // TODO: Invia al database
       Serial.print("  -> Valore: "); Serial.print(risultato.valorePulito); Serial.println(" kg");
+      inviaDatoSensore("peso", "HX711_001", &risultato, "kg");
     }
     Serial.println("---\n");
   }
 
-  // Piccolo delay per evitare busy-wait
   delay(100);
 }
 
 // ============================================================================
-// FUNZIONI UTILITY
+// UTILITY
 // ============================================================================
-
-void stampaStatisticheSistema() {
-  Serial.println("\n--- STATISTICHE SISTEMA ---");
+void stampaStatistiche() {
+  Serial.println("\n--- STATISTICHE ---");
+  Serial.print("MAC: "); Serial.println(deviceMacAddress);
   Serial.print("Uptime: "); Serial.print(millis() / 1000); Serial.println(" sec");
   Serial.print("Free RAM: "); Serial.println(ESP.getFreeHeap());
-  Serial.print("Config caricata: "); Serial.println(configCaricata ? "SI" : "NO");
+  Serial.print("Wi-Fi: "); Serial.println(isWiFiConnected() ? "Connesso" : "Disconnesso");
+  if (isWiFiConnected()) {
+    Serial.print("RSSI: "); Serial.print(WiFi.RSSI()); Serial.println(" dBm");
+  }
   Serial.println();
 }
