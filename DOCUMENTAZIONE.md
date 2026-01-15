@@ -1,6 +1,7 @@
 
 
 
+
 # Documentazione ESP32 Logic
 
 Versione 1.0
@@ -313,4 +314,35 @@ Sensore utilizzato: SHT21 - HTU21
 
 ## Consumi sensori
 
-### Sensore temperatura DS18B20
+### Consumi previsti
+
+-   **SHT21 (3.3 V)**
+    
+    -   standby: ~0,1–1 µA
+    -   misure ogni 6 min: aggiunta media trascurabile (<< 1 µA)
+    -   **medio realistico:**  ~**0,2–2 µA**
+-   **DS18B20 (3.0–5.5 V)**
+    
+    -   standby: ~1 µA
+    -   conversione ogni 6 min:
+        -   12 bit: aggiunge ~3,1 µA medi
+    -   **medio realistico (12 bit):**  ~**4–5 µA**  (meno se 9–11 bit)
+-   **HX711 (modulo sempre alimentato, ma in power-down tra letture)**
+    
+    -   HX711 in power‑down: tipicamente  **< 1 µA**  (il chip)
+    -   **MA**  se la cella resta alimentata, il chip non è il problema.
+-   **Cella di carico (sempre alimentata)**
+    
+    -   Dipende dalla resistenza del ponte (molto spesso  **350 Ω**, a volte 1 kΩ).
+    -   Corrente ≈ V / R:
+        -   **a 3.3 V con 350 Ω:**  3.3/350 ≈  **9,4 mA**
+        -   **a 5.0 V con 350 Ω:**  5/350 ≈  **14,3 mA**
+        -   **a 3.3 V con 1 kΩ:**  **3,3 mA**
+        -   **a 5.0 V con 1 kΩ:**  **5 mA**
+
+### Totale medio (Sensori + bilancia, VCC sempre presente)
+
+-   SHT21: ~**< 0,002 mA**
+-   DS18B20: ~**0,004–0,005 mA**
+-   HX711 chip: ~ **~0,001 mA o meno**
+-   Cella di carico:  **3–15 mA** 
