@@ -18,7 +18,7 @@ flowchart TB
     n1 -- Sì --> I
     n1 -- No --> n4@{ label: "<span style=\"color:\">Salva campione e timestamp su ESP32</span>" }
     n4 --> n5@{ label: "<span style=\"color:\">Invio Alert a DB</span>" }
-    n5 --> P["Ritorno Deep Sleep 3 ore"]
+    n5 --> P["Aspetta 3 ore"]
     J --> P
     L --> P
     O --> P
