@@ -1,15 +1,10 @@
----
-config:
-  theme: redux
-  layout: fixed
----
 flowchart TB
     A(["Start"]) --> E["Lettura soglia MIN (DB)"]
     E --> F["Lettura soglia MAX (DB)"]
     F --> G["Presa campione peso (ESP)"]
     G --> H["Taratura / Conversione peso (kg)"]
     I{"Peso > MAX?"} -- Sì --> J["Alert: peso sopra soglia"]
-    I -- No --> K{"Peso &lt; MIN?"}
+    I -- No --> K{"Peso < MIN?"}
     K -- Sì --> L["Alert: peso sotto soglia"]
     K -- No --> M["Peso OK"]
     M --> N["Associa data e ora"]
@@ -22,6 +17,10 @@ flowchart TB
     J --> P
     L --> P
     O --> P
+
+    %% freccia di ritorno per il ciclo
+    P --> A
+
     n2[" "]
     n3[" "]
 
