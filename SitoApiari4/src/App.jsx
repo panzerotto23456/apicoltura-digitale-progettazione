@@ -21,51 +21,104 @@ function App() {
 
   // Carica gli apiari dal database quando l'utente fa il login
   useEffect(() => {
+    console.log('UseEffect triggered - Screen:', currentScreen, 'ApiKey:', apiKey);
     if (apiKey && currentScreen === 'map') {
       loadApiariesFromDB();
     }
   }, [apiKey, currentScreen]);
 
   const loadApiariesFromDB = async () => {
-    setLoadingApiaries(true);
-    try {
-      const response = await fetch('https://dbarniadigitale-0abe.restdb.io/rest/apiari', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-apikey': apiKey
-        }
-      });
+  console.log('=== INIZIO CARICAMENTO APIARI DAL DATABASE ===');
+  console.log('API Key utilizzata:', apiKey);
+  
+  setLoadingApiaries(true);
+  try {
+    // Carica apiari
+    const apiariesResponse = await fetch('https://databaseclone2-bc78.restdb.io/rest/apiari', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-apikey': apiKey
+      }
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Apiari caricati dal database:', data);
+    // Carica arnie
+    const hivesResponse = await fetch('https://databaseclone2-bc78.restdb.io/rest/arnie', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-apikey': apiKey
+      }
+    });
+
+    if (apiariesResponse.ok && hivesResponse.ok) {
+      const apiariesData = await apiariesResponse.json();
+      const hivesData = await hivesResponse.json();
+      
+      console.log('=== DATI RICEVUTI DAL DATABASE ===');
+      console.log('Numero di apiari:', apiariesData.length);
+      console.log('Numero di arnie:', hivesData.length);
+      console.log('Apiari:', apiariesData);
+      console.log('Arnie:', hivesData);
+      
+      // Trasforma i dati per compatibilità con il resto dell'app
+      const transformedApiaries = apiariesData.map(apiary => {
+        // Trova tutte le arnie associate a questo apiario
+        const apiaryHives = hivesData
+          .filter(hive => hive.arn_api_id === apiary._id)
+          .map(hive => ({
+            id: hive._id,
+            pesoMax: hive.arn_pesoMax,
+            pesoMin: hive.arn_pesoMin,
+            umiditaMax: hive.arn_umiditaMax,
+            umiditaMin: hive.arn_umiditaMin,
+            temperaturaMax: hive.arn_temperaturaMax,
+            temperaturaMin: hive.arn_temperaturaMin,
+            dataInst: hive.arn_dataInst,
+            piena: hive.arn_piena,
+            MacAddress: hive.arn_MacAddress
+          }));
         
-        // Trasforma i dati per compatibilità con il resto dell'app
-        const transformedApiaries = data.map(apiary => ({
+        console.log(`Apiario ${apiary.api_nome}: ${apiaryHives.length} arnie`);
+        console.log('ID apiario:', apiary._id);
+        console.log('Arnie trovate:', apiaryHives);
+        
+        const transformed = {
           ...apiary,
           id: apiary._id,
-          hives: apiary.hives || [],
+          hives: apiaryHives,
           coordinates: {
             lat: apiary.api_lat,
             lng: apiary.api_lon
           },
           nome: apiary.api_nome,
           luogo: apiary.api_luogo
-        }));
+        };
         
-        setApiaries(transformedApiaries);
-      } else {
-        console.error('Errore nel caricamento degli apiari');
-      }
-    } catch (error) {
-      console.error('Errore durante il caricamento degli apiari:', error);
-    } finally {
-      setLoadingApiaries(false);
+        return transformed;
+      });
+      
+      console.log('=== APIARI TRASFORMATI ===');
+      console.log('Numero:', transformedApiaries.length);
+      console.log('Dati completi:', transformedApiaries);
+      
+      setApiaries(transformedApiaries);
+    } else {
+      console.error('Errore nel caricamento dei dati');
+      alert('Errore nel caricamento dei dati dal database');
     }
-  };
-
+  } catch (error) {
+    console.error('=== ERRORE DURANTE IL CARICAMENTO ===');
+    console.error('Errore:', error);
+    console.error('Stack:', error.stack);
+    alert('Errore di rete: ' + error.message);
+  } finally {
+    setLoadingApiaries(false);
+    console.log('=== FINE CARICAMENTO APIARI ===');
+  }
+};
   const handleLogin = (key) => {
+    console.log('Login effettuato con chiave:', key);
     setApiKey(key);
     setCurrentScreen('map');
   };
@@ -183,6 +236,11 @@ function App() {
     setSelectedHive(null);
   };
 
+  console.log('=== RENDER APP ===');
+  console.log('Current screen:', currentScreen);
+  console.log('Numero apiari:', apiaries.length);
+  console.log('Apiari:', apiaries);
+
   return (
     <div className="App">
       {currentScreen === 'login' && (
@@ -194,6 +252,7 @@ function App() {
           onAddApiary={handleAddApiary}
           apiaries={apiaries}
           onViewApiary={handleViewApiary}
+          loadingApiaries={loadingApiaries}
         />
       )}
       {currentScreen === 'addApiary' && (
