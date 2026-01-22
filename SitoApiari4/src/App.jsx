@@ -1,314 +1,164 @@
 import React, { useState, useEffect } from 'react';
 import LoginScreen from './components/LoginScreen';
 import MapScreen from './components/MapScreen';
-import AddApiaryScreen from './components/AddApiaryScreen';
-import AddHiveScreen from './components/AddHiveScreen';
 import ApiaryDetailScreen from './components/ApiaryDetailScreen';
 import HiveDetailScreen from './components/HiveDetailScreen';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
   const [apiKey, setApiKey] = useState(null);
-  const [selectedCoordinates, setSelectedCoordinates] = useState(null);
-  const [currentApiary, setCurrentApiary] = useState(null);
   const [apiaries, setApiaries] = useState([]);
-  const [selectedApiaryForView, setSelectedApiaryForView] = useState(null);
+  const [selectedApiary, setSelectedApiary] = useState(null);
   const [selectedHive, setSelectedHive] = useState(null);
   const [selectedHiveNumber, setSelectedHiveNumber] = useState(null);
-  const [selectedApiaryName, setSelectedApiaryName] = useState(null);
-  const [isAddingToExisting, setIsAddingToExisting] = useState(false);
   const [loadingApiaries, setLoadingApiaries] = useState(false);
 
-  // Carica gli apiari dal database quando l'utente fa il login
   useEffect(() => {
-    console.log('UseEffect triggered - Screen:', currentScreen, 'ApiKey:', apiKey);
     if (apiKey && currentScreen === 'map') {
       loadApiariesFromDB();
     }
   }, [apiKey, currentScreen]);
 
   const loadApiariesFromDB = async () => {
-  console.log('=== INIZIO CARICAMENTO APIARI DAL DATABASE ===');
-  console.log('API Key utilizzata:', apiKey);
-  
-  setLoadingApiaries(true);
-  try {
-    // Carica apiari
-    const apiariesResponse = await fetch('https://databasesagomato2316-f801.restdb.io/rest/apiari', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-apikey': apiKey
-      }
-    });
+    setLoadingApiaries(true);
+    try {
+      const [apiariesRes, hivesRes, sensorsRes, readingsRes] = await Promise.all([
+        fetch('https://databasesagomato2316-f801.restdb.io/rest/apiari', {
+          headers: { 'x-apikey': apiKey }
+        }),
+        fetch('https://databasesagomato2316-f801.restdb.io/rest/arnie', {
+          headers: { 'x-apikey': apiKey }
+        }),
+        fetch('https://databasesagomato2316-f801.restdb.io/rest/sensoriArnia', {
+          headers: { 'x-apikey': apiKey }
+        }),
+        fetch('https://databasesagomato2316-f801.restdb.io/rest/rilevazioni', {
+          headers: { 'x-apikey': apiKey }
+        })
+      ]);
 
-    // Carica arnie
-    const hivesResponse = await fetch('https://databasesagomato2316-f801.restdb.io/rest/arnie', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-apikey': apiKey
-      }
-    });
+      const apiariesData = await apiariesRes.json();
+      const hivesData = await hivesRes.json();
+      const sensorsData = await sensorsRes.json();
+      const readingsData = await readingsRes.json();
 
-    console.log('Response status apiari:', apiariesResponse.status);
-    console.log('Response status arnie:', hivesResponse.status);
-
-    if (apiariesResponse.ok && hivesResponse.ok) {
-      const apiariesData = await apiariesResponse.json();
-      const hivesData = await hivesResponse.json();
-      
-      console.log('=== DATI RICEVUTI DAL DATABASE ===');
-      console.log('Numero di apiari:', apiariesData.length);
-      console.log('Numero di arnie:', hivesData.length);
-      console.log('Dati apiari:', apiariesData);
-      console.log('Dati arnie:', hivesData);
-      
-      // DEBUG: Verifica gli ID
-      apiariesData.forEach(apiary => {
-        console.log(`Apiario "${apiary.api_nome}" ha api_id: ${apiary.api_id}`);
-      });
-      
-      hivesData.forEach(hive => {
-        console.log(`Arnia con MAC ${hive.arn_MacAddress} ha arn_api_id: ${hive.arn_api_id}`);
-      });
-      
-      // Trasforma i dati per compatibilità con il resto dell'app
       const transformedApiaries = apiariesData.map(apiary => {
-        // IMPORTANTE: Confronta arn_api_id con api_id (NON con _id!)
         const apiaryHives = hivesData
-          .filter(hive => {
-            const match = hive.arn_api_id === apiary.api_id;
-            console.log(`Confronto: hive.arn_api_id (${hive.arn_api_id}) === apiary.api_id (${apiary.api_id}) = ${match}`);
-            return match;
-          })
-          .map(hive => ({
-            id: hive._id,
-            pesoMax: hive.arn_pesoMax,
-            pesoMin: hive.arn_pesoMin,
-            umiditaMax: hive.arn_umiditaMax,
-            umiditaMin: hive.arn_umiditaMin,
-            temperaturaMax: hive.arn_temperaturaMax,
-            temperaturaMin: hive.arn_temperaturaMin,
-            dataInst: hive.arn_dataInst,
-            piena: hive.arn_piena,
-            MacAddress: hive.arn_MacAddress
-          }));
+          .filter(hive => hive.arn_api_id === apiary.api_id)
+          .map(hive => {
+            const hiveSensors = sensorsData.filter(s => s.sea_arn_id === hive.arn_id);
+            
+            const getLatestReading = (sensorTypeId) => {
+              const sensor = hiveSensors.find(s => s.sea_tip_id === sensorTypeId);
+              if (!sensor) return null;
+              
+              const sensorReadings = readingsData
+                .filter(r => r.ril_sea_id === sensor.sea_id)
+                .sort((a, b) => new Date(b.ril_dataOra) - new Date(a.ril_dataOra));
+              
+              return sensorReadings[0] || null;
+            };
+            
+            const pesoReading = getLatestReading(6);
+            const tempReading = getLatestReading(11);
+            const umidSensor = hiveSensors.find(s => s.sea_tip_id !== 6 && s.sea_tip_id !== 11);
+            const umidReading = umidSensor ? readingsData
+              .filter(r => r.ril_sea_id === umidSensor.sea_id)
+              .sort((a, b) => new Date(b.ril_dataOra) - new Date(a.ril_dataOra))[0] : null;
+            
+            const pesoSensor = hiveSensors.find(s => s.sea_tip_id === 6);
+            const tempSensor = hiveSensors.find(s => s.sea_tip_id === 11);
+            
+            return {
+              id: hive._id,
+              arn_id: hive.arn_id,
+              pesoMax: pesoSensor?.sea_max,
+              pesoMin: pesoSensor?.sea_min,
+              pesoCurrent: pesoReading?.ril_dato,
+              umiditaMax: umidSensor?.sea_max,
+              umiditaMin: umidSensor?.sea_min,
+              umiditaCurrent: umidReading?.ril_dato,
+              temperaturaMax: tempSensor?.sea_max,
+              temperaturaMin: tempSensor?.sea_min,
+              temperaturaCurrent: tempReading?.ril_dato,
+              MacAddress: hive.arn_MacAddress,
+              lastUpdate: [pesoReading, tempReading, umidReading]
+                .filter(r => r)
+                .map(r => new Date(r.ril_dataOra))
+                .sort((a, b) => b - a)[0]
+            };
+          });
         
-        console.log(`✅ Apiario "${apiary.api_nome}" (api_id: ${apiary.api_id}): ${apiaryHives.length} arnie trovate`);
-        if (apiaryHives.length > 0) {
-          console.log('   Arnie:', apiaryHives);
-        }
-        
-        const transformed = {
-          ...apiary,
+        return {
           id: apiary._id,
-          hives: apiaryHives,
-          coordinates: {
-            lat: apiary.api_lat,
-            lng: apiary.api_lon
-          },
+          api_id: apiary.api_id,
           nome: apiary.api_nome,
-          luogo: apiary.api_luogo
+          luogo: apiary.api_luogo,
+          coordinates: { lat: apiary.api_lat, lng: apiary.api_lon },
+          hives: apiaryHives
         };
-        
-        return transformed;
       });
-      
-      console.log('=== APIARI TRASFORMATI (FINALE) ===');
-      console.log('Numero:', transformedApiaries.length);
-      transformedApiaries.forEach(apiary => {
-        console.log(`"${apiary.nome}": ${apiary.hives.length} arnie`);
-      });
-      console.log('Dati completi:', transformedApiaries);
-      
+
       setApiaries(transformedApiaries);
-    } else {
-      const apiariesError = await apiariesResponse.text();
-      const hivesError = await hivesResponse.text();
-      console.error('Errore nel caricamento dei dati');
-      console.error('Errore apiari:', apiariesError);
-      console.error('Errore arnie:', hivesError);
-      alert('Errore nel caricamento dei dati dal database');
+    } catch (error) {
+      console.error('Errore caricamento dati:', error);
+      alert('Errore nel caricamento dei dati: ' + error.message);
+    } finally {
+      setLoadingApiaries(false);
     }
-  } catch (error) {
-    console.error('=== ERRORE DURANTE IL CARICAMENTO ===');
-    console.error('Errore:', error);
-    console.error('Stack:', error.stack);
-    alert('Errore di rete: ' + error.message);
-  } finally {
-    setLoadingApiaries(false);
-    console.log('=== FINE CARICAMENTO APIARI ===');
-  }
-};
+  };
+
   const handleLogin = (key) => {
-    console.log('Login effettuato con chiave:', key);
     setApiKey(key);
     setCurrentScreen('map');
   };
 
-  const handleAddApiary = (coordinates) => {
-    setSelectedCoordinates(coordinates);
-    setCurrentScreen('addApiary');
-  };
-
-  const handleApiaryCreated = (apiaryData) => {
-    const newApiary = {
-      ...apiaryData,
-      id: apiaryData._id || apiaryData.id || Date.now(),
-      hives: []
-    };
-    setCurrentApiary(newApiary);
-    
-    // Aggiungi l'apiario alla lista locale
-    setApiaries([...apiaries, newApiary]);
-    
-    setIsAddingToExisting(false);
-    setCurrentScreen('addHive');
-  };
-
-  const handleHivesCompleted = (updatedApiary) => {
-    if (isAddingToExisting) {
-      // Stiamo aggiungendo arnie a un apiario esistente
-      const updatedApiaries = apiaries.map(a => 
-        a.id === updatedApiary.id ? updatedApiary : a
-      );
-      setApiaries(updatedApiaries);
-    } else {
-      // Stiamo creando un nuovo apiario
-      const apiaryExists = apiaries.some(a => a.id === updatedApiary.id);
-      if (apiaryExists) {
-        const updatedApiaries = apiaries.map(a => 
-          a.id === updatedApiary.id ? updatedApiary : a
-        );
-        setApiaries(updatedApiaries);
-      } else {
-        setApiaries([...apiaries, updatedApiary]);
-      }
-    }
-    
-    // Vai sempre alla mappa quando si completa
-    setCurrentScreen('map');
-    setSelectedCoordinates(null);
-    setCurrentApiary(null);
-    setIsAddingToExisting(false);
-    setSelectedApiaryForView(null);
-  };
-
   const handleViewApiary = (apiary) => {
-    // Cerca l'apiario nella lista esistente
-    const existingApiary = apiaries.find(a => a.id === apiary.id || a._id === apiary._id);
-    
-    if (existingApiary) {
-      // Se esiste, usa quello aggiornato dalla lista
-      setSelectedApiaryForView(existingApiary);
-    } else {
-      // Se non esiste, aggiungilo
-      const updatedApiaries = [...apiaries, apiary];
-      setApiaries(updatedApiaries);
-      setSelectedApiaryForView(apiary);
-    }
-    
+    setSelectedApiary(apiary);
     setCurrentScreen('apiaryDetail');
-  };
-
-  const handleAddHiveToApiary = (apiary) => {
-    // Trova l'apiario più recente dalla lista
-    const currentApiaryInList = apiaries.find(a => a.id === apiary.id || a._id === apiary._id);
-    setCurrentApiary(currentApiaryInList || apiary);
-    setIsAddingToExisting(true);
-    setCurrentScreen('addHive');
   };
 
   const handleViewHive = (hive, hiveNumber, apiaryName) => {
     setSelectedHive(hive);
     setSelectedHiveNumber(hiveNumber);
-    setSelectedApiaryName(apiaryName);
     setCurrentScreen('hiveDetail');
   };
 
   const handleBackToMap = () => {
     setCurrentScreen('map');
-    setSelectedCoordinates(null);
-    setCurrentApiary(null);
-    setSelectedApiaryForView(null);
+    setSelectedApiary(null);
     setSelectedHive(null);
-    setIsAddingToExisting(false);
   };
 
   const handleBackToApiary = () => {
-    if (isAddingToExisting) {
-      // Se stiamo aggiungendo a un apiario esistente, torna al dettaglio
-      const updatedApiary = apiaries.find(a => a.id === currentApiary.id || a._id === currentApiary._id);
-      if (updatedApiary) {
-        setSelectedApiaryForView(updatedApiary);
-      }
-      setCurrentScreen('apiaryDetail');
-    } else {
-      // Altrimenti torna alla schermata di creazione apiario
-      setCurrentScreen('addApiary');
-    }
-  };
-
-  const handleBackToApiaryDetail = () => {
-    // Aggiorna l'apiario selezionato con i dati più recenti
-    const updatedApiary = apiaries.find(a => a.id === selectedApiaryForView.id || a._id === selectedApiaryForView._id);
-    if (updatedApiary) {
-      setSelectedApiaryForView(updatedApiary);
-    }
     setCurrentScreen('apiaryDetail');
     setSelectedHive(null);
   };
 
-  console.log('=== RENDER APP ===');
-  console.log('Current screen:', currentScreen);
-  console.log('Numero apiari:', apiaries.length);
-  console.log('Apiari:', apiaries);
-
   return (
     <div className="App">
-      {currentScreen === 'login' && (
-        <LoginScreen onLogin={handleLogin} />
-      )}
+      {currentScreen === 'login' && <LoginScreen onLogin={handleLogin} />}
       {currentScreen === 'map' && (
         <MapScreen 
-          apiKey={apiKey}
-          onAddApiary={handleAddApiary}
-          apiaries={apiaries}
+          apiaries={apiaries} 
           onViewApiary={handleViewApiary}
           loadingApiaries={loadingApiaries}
         />
       )}
-      {currentScreen === 'addApiary' && (
-        <AddApiaryScreen 
-          apiKey={apiKey}
-          coordinates={selectedCoordinates} 
-          onBack={handleBackToMap}
-          onApiaryCreated={handleApiaryCreated}
-        />
-      )}
-      {currentScreen === 'addHive' && (
-        <AddHiveScreen 
-          apiary={currentApiary}
-          onBack={handleBackToApiary}
-          onComplete={handleHivesCompleted}
-          onViewApiary={handleViewApiary}
-        />
-      )}
-      {currentScreen === 'apiaryDetail' && (
+      {currentScreen === 'apiaryDetail' && selectedApiary && (
         <ApiaryDetailScreen
-          apiary={selectedApiaryForView}
+          apiary={selectedApiary}
           onBack={handleBackToMap}
-          onAddHive={handleAddHiveToApiary}
           onViewHive={handleViewHive}
         />
       )}
-      {currentScreen === 'hiveDetail' && (
+      {currentScreen === 'hiveDetail' && selectedHive && (
         <HiveDetailScreen
           hive={selectedHive}
           hiveNumber={selectedHiveNumber}
-          apiaryName={selectedApiaryName}
-          onBack={handleBackToApiaryDetail}
+          apiaryName={selectedApiary?.nome}
+          onBack={handleBackToApiary}
+          apiKey={apiKey}
         />
       )}
     </div>

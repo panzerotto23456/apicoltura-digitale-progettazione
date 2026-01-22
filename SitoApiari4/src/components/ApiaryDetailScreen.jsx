@@ -1,8 +1,8 @@
 import React from 'react';
-import { Scale, Droplets, Thermometer, AlertTriangle, Plus } from 'lucide-react';
+import { Scale, Droplets, Thermometer, AlertTriangle, ArrowLeft } from 'lucide-react';
 
-const ApiaryDetailScreen = ({ apiary, onBack, onAddHive, onViewHive }) => {
-  // Calcola le medie per i sensori
+const ApiaryDetailScreen = ({ apiary, onBack, onViewHive }) => {
+  // Calcola le medie usando i valori CORRENTI delle rilevazioni
   const calculateAverages = () => {
     if (!apiary.hives || apiary.hives.length === 0) {
       return { peso: 0, umidita: 0, temperatura: 0 };
@@ -16,175 +16,144 @@ const ApiaryDetailScreen = ({ apiary, onBack, onAddHive, onViewHive }) => {
     let countTemp = 0;
 
     apiary.hives.forEach(hive => {
-      // Peso medio
-      if (hive.pesoMax && hive.pesoMin) {
-        const pesoMax = parseFloat(hive.pesoMax);
-        const pesoMin = parseFloat(hive.pesoMin);
-        if (!isNaN(pesoMax) && !isNaN(pesoMin)) {
-          totalPeso += (pesoMax + pesoMin) / 2;
-          countPeso++;
-        }
+      if (hive.pesoCurrent != null) {
+        totalPeso += parseFloat(hive.pesoCurrent);
+        countPeso++;
       }
-
-      // Umidità media
-      if (hive.umiditaMax && hive.umiditaMin) {
-        const umiditaMax = parseFloat(hive.umiditaMax);
-        const umiditaMin = parseFloat(hive.umiditaMin);
-        if (!isNaN(umiditaMax) && !isNaN(umiditaMin)) {
-          totalUmidita += (umiditaMax + umiditaMin) / 2;
-          countUmidita++;
-        }
+      if (hive.umiditaCurrent != null) {
+        totalUmidita += parseFloat(hive.umiditaCurrent);
+        countUmidita++;
       }
-
-      // Temperatura media
-      if (hive.temperaturaMax && hive.temperaturaMin) {
-        const tempMax = parseFloat(hive.temperaturaMax);
-        const tempMin = parseFloat(hive.temperaturaMin);
-        if (!isNaN(tempMax) && !isNaN(tempMin)) {
-          totalTemp += (tempMax + tempMin) / 2;
-          countTemp++;
-        }
+      if (hive.temperaturaCurrent != null) {
+        totalTemp += parseFloat(hive.temperaturaCurrent);
+        countTemp++;
       }
     });
 
     return {
-      peso: countPeso > 0 ? (totalPeso / countPeso).toFixed(1) : 0,
-      umidita: countUmidita > 0 ? (totalUmidita / countUmidita).toFixed(1) : 0,
-      temperatura: countTemp > 0 ? (totalTemp / countTemp).toFixed(1) : 0
+      peso: countPeso > 0 ? (totalPeso / countPeso).toFixed(1) : '0.0',
+      umidita: countUmidita > 0 ? (totalUmidita / countUmidita).toFixed(1) : '0.0',
+      temperatura: countTemp > 0 ? (totalTemp / countTemp).toFixed(1) : '0.0'
     };
   };
 
-  // Determina lo stato dell'arnia (normale, attenzione, critica)
+  // Determina lo stato dell'arnia in base alle soglie e ai valori correnti
   const getHiveStatus = (hive) => {
-    const pesoMax = parseFloat(hive.pesoMax) || 0;
-    const umiditaMax = parseFloat(hive.umiditaMax) || 0;
-    const temperaturaMax = parseFloat(hive.temperaturaMax) || 0;
+    const peso = parseFloat(hive.pesoCurrent) || 0;
+    const temp = parseFloat(hive.temperaturaCurrent) || 0;
+    const umid = parseFloat(hive.umiditaCurrent) || 0;
 
-    if (temperaturaMax > 38 || umiditaMax > 75) {
+    const pesoMax = parseFloat(hive.pesoMax) || Infinity;
+    const pesoMin = parseFloat(hive.pesoMin) || 0;
+    const tempMax = parseFloat(hive.temperaturaMax) || Infinity;
+    const tempMin = parseFloat(hive.temperaturaMin) || 0;
+    const umidMax = parseFloat(hive.umiditaMax) || Infinity;
+    const umidMin = parseFloat(hive.umiditaMin) || 0;
+
+    // Stato CRITICO: fuori dalle soglie massime/minime
+    if (temp > tempMax || temp < tempMin || 
+        umid > umidMax || umid < umidMin || 
+        peso > pesoMax || peso < pesoMin) {
       return 'critica';
-    } else if (temperaturaMax > 36 || umiditaMax > 70 || pesoMax > 50) {
+    }
+
+    // Stato ATTENZIONE: vicino alle soglie (90% della soglia max o 110% della soglia min)
+    const tempThresholdMax = tempMax * 0.9;
+    const tempThresholdMin = tempMin * 1.1;
+    const umidThresholdMax = umidMax * 0.9;
+    const umidThresholdMin = umidMin * 1.1;
+    const pesoThresholdMax = pesoMax * 0.9;
+    
+    if (temp > tempThresholdMax || temp < tempThresholdMin ||
+        umid > umidThresholdMax || umid < umidThresholdMin ||
+        peso > pesoThresholdMax) {
       return 'attenzione';
     }
+
     return 'normale';
   };
 
   const averages = calculateAverages();
 
-  // Genera valori simulati per ogni arnia (per mostrare dati realistici)
-  const getHiveData = (hive, index) => {
-    const baseWeight = 44 + (index % 5);
-    const baseHumidity = 55 + (index % 30);
-    const baseTemp = 33 + (index % 8);
-
-    return {
-      peso: hive.pesoMax && hive.pesoMin 
-        ? ((parseFloat(hive.pesoMax) + parseFloat(hive.pesoMin)) / 2).toFixed(1)
-        : baseWeight.toFixed(1),
-      umidita: hive.umiditaMax && hive.umiditaMin
-        ? ((parseFloat(hive.umiditaMax) + parseFloat(hive.umiditaMin)) / 2).toFixed(0)
-        : baseHumidity,
-      temperatura: hive.temperaturaMax && hive.temperaturaMin
-        ? ((parseFloat(hive.temperaturaMax) + parseFloat(hive.temperaturaMin)) / 2).toFixed(1)
-        : baseTemp.toFixed(1)
-    };
-  };
-
   return (
     <div className="min-h-screen bg-[#fef8e8] px-6 py-8">
-      {/* Header con bottone indietro */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6">
         <button
           onClick={onBack}
           className="flex items-center gap-2 px-6 py-2 text-base font-medium text-gray-800 bg-[#e69a4f] rounded-full hover:bg-[#d88a3f] transition-colors"
         >
-          <span>←</span>
+          <ArrowLeft className="w-5 h-5" />
           <span>Torna alla Lista Apiari</span>
-        </button>
-
-        {/* Bottone Aggiungi Arnia */}
-        <button
-          onClick={() => onAddHive(apiary)}
-          className="flex items-center gap-2 px-6 py-2 text-base font-medium text-white bg-green-600 rounded-full hover:bg-green-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Aggiungi Arnia</span>
         </button>
       </div>
 
-      {/* Titolo apiario */}
-      <h1 className="text-3xl font-medium text-gray-800 mb-2">
-        Apiario {apiary.nome}
-      </h1>
-      <p className="text-lg text-[#e69a4f] mb-8">
-        Totale arnie: {apiary.hives.length}
-      </p>
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Apiario {apiary.nome}</h1>
+      <p className="text-lg text-gray-600 mb-8">Totale arnie: {apiary.hives.length}</p>
 
       {/* Card medie generali */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {/* Peso Medio */}
-        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 flex items-center gap-4">
-          <div className="bg-[#fef3e0] p-3 rounded-full">
-            <Scale className="w-6 h-6 text-[#e69a4f]" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Peso Medio</p>
-            <p className="text-2xl font-medium text-gray-800">{averages.peso} kg</p>
-          </div>
-        </div>
-
-        {/* Umidità Media */}
-        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 flex items-center gap-4">
-          <div className="bg-[#e0f2fe] p-3 rounded-full">
-            <Droplets className="w-6 h-6 text-[#0ea5e9]" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Umidità Media</p>
-            <p className="text-2xl font-medium text-gray-800">{averages.umidita}%</p>
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="bg-[#fef3e0] p-3 rounded-full">
+              <Scale className="w-6 h-6 text-[#e69a4f]" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Peso Medio</p>
+              <p className="text-2xl font-semibold text-gray-800">{averages.peso} kg</p>
+            </div>
           </div>
         </div>
 
-        {/* Temperatura Media */}
-        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 flex items-center gap-4">
-          <div className="bg-[#fee2e2] p-3 rounded-full">
-            <Thermometer className="w-6 h-6 text-[#ef4444]" />
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="bg-[#e0f2fe] p-3 rounded-full">
+              <Droplets className="w-6 h-6 text-[#0ea5e9]" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Umidità Media</p>
+              <p className="text-2xl font-semibold text-gray-800">{averages.umidita}%</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-600">Temperatura Media</p>
-            <p className="text-2xl font-medium text-gray-800">{averages.temperatura}°C</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 border-2 border-gray-200">
+          <div className="flex items-center gap-4">
+            <div className="bg-[#fee2e2] p-3 rounded-full">
+              <Thermometer className="w-6 h-6 text-[#ef4444]" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Temperatura Media</p>
+              <p className="text-2xl font-semibold text-gray-800">{averages.temperatura}°C</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Sezione Arnie */}
-      <h2 className="text-2xl font-medium text-gray-800 mb-4">Arnie</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Arnie</h2>
 
       {/* Griglia arnie */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {apiary.hives.map((hive, index) => {
           const status = getHiveStatus(hive);
-          const data = getHiveData(hive, index);
           
           const borderColor = 
             status === 'critica' ? 'border-red-500' :
             status === 'attenzione' ? 'border-yellow-500' :
-            'border-gray-200';
+            'border-green-500';
 
           const bgColor = 
             status === 'critica' ? 'bg-red-50' :
             status === 'attenzione' ? 'bg-yellow-50' :
-            'bg-white';
+            'bg-green-50';
 
           return (
             <div
               key={hive.id}
               onClick={() => onViewHive(hive, index + 1, apiary.nome)}
-              className={`${bgColor} rounded-2xl p-4 border-2 ${borderColor} transition-all hover:shadow-lg cursor-pointer hover:scale-105`}
+              className={`${bgColor} rounded-2xl p-4 border-2 ${borderColor} hover:shadow-lg cursor-pointer transition-all hover:scale-105`}
             >
-              {/* Header arnia */}
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-medium text-gray-800">
-                  Arnia {index + 1}
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-800">Arnia {index + 1}</h3>
                 {status !== 'normale' && (
                   <AlertTriangle 
                     className={`w-5 h-5 ${status === 'critica' ? 'text-red-500' : 'text-yellow-500'}`}
@@ -192,32 +161,58 @@ const ApiaryDetailScreen = ({ apiary, onBack, onAddHive, onViewHive }) => {
                 )}
               </div>
 
-              {/* Dati sensori */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Scale className="w-4 h-4 text-[#e69a4f]" />
-                  <span className="text-gray-700">{data.peso} kg</span>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Scale className="w-4 h-4 text-[#e69a4f]" />
+                    <span className="text-gray-700">Peso:</span>
+                  </div>
+                  <span className="font-medium text-gray-800">
+                    {hive.pesoCurrent ? parseFloat(hive.pesoCurrent).toFixed(1) : 'N/A'} kg
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Droplets className="w-4 h-4 text-[#0ea5e9]" />
-                  <span className="text-gray-700">{data.umidita}%</span>
+
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Droplets className="w-4 h-4 text-[#0ea5e9]" />
+                    <span className="text-gray-700">Umidità:</span>
+                  </div>
+                  <span className="font-medium text-gray-800">
+                    {hive.umiditaCurrent ? parseFloat(hive.umiditaCurrent).toFixed(1) : 'N/A'}%
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Thermometer className="w-4 h-4 text-[#ef4444]" />
-                  <span className="text-gray-700">{data.temperatura}°C</span>
+
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Thermometer className="w-4 h-4 text-[#ef4444]" />
+                    <span className="text-gray-700">Temp:</span>
+                  </div>
+                  <span className="font-medium text-gray-800">
+                    {hive.temperaturaCurrent ? parseFloat(hive.temperaturaCurrent).toFixed(1) : 'N/A'}°C
+                  </span>
                 </div>
               </div>
 
-              {/* Badge stato */}
               {status !== 'normale' && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                     status === 'critica' 
                       ? 'bg-red-100 text-red-700' 
                       : 'bg-yellow-100 text-yellow-700'
                   }`}>
-                    {status === 'critica' ? 'Critica' : 'Attenzione'}
+                    {status === 'critica' ? '⚠️ Critica' : '⚠ Attenzione'}
                   </span>
+                </div>
+              )}
+
+              {hive.lastUpdate && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Agg: {new Date(hive.lastUpdate).toLocaleString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </div>
               )}
             </div>
@@ -225,17 +220,10 @@ const ApiaryDetailScreen = ({ apiary, onBack, onAddHive, onViewHive }) => {
         })}
       </div>
 
-      {/* Messaggio se non ci sono arnie */}
       {apiary.hives.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg mb-4">Nessuna arnia presente in questo apiario</p>
-          <button
-            onClick={() => onAddHive(apiary)}
-            className="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-green-600 rounded-full hover:bg-green-700 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Aggiungi la prima arnia</span>
-          </button>
+          <Scale className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg">Nessuna arnia presente in questo apiario</p>
         </div>
       )}
     </div>
