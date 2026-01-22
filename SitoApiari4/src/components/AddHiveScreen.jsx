@@ -13,7 +13,8 @@ const AddHiveScreen = ({ apiary, onBack, onComplete, onViewApiary }) => {
     temperaturaTimer: ''
   });
   
-  const [hives, setHives] = useState([]);
+  // Inizializza con le arnie già esistenti nell'apiario
+  const [hives, setHives] = useState(apiary.hives || []);
 
   const handleInputChange = (field, value) => {
     setCurrentHive({
@@ -36,7 +37,8 @@ const AddHiveScreen = ({ apiary, onBack, onComplete, onViewApiary }) => {
       createdAt: new Date()
     };
 
-    setHives([...hives, newHive]);
+    const updatedHives = [...hives, newHive];
+    setHives(updatedHives);
     
     setCurrentHive({
       pesoMax: '',
@@ -177,14 +179,14 @@ const AddHiveScreen = ({ apiary, onBack, onComplete, onViewApiary }) => {
             onClick={handleBackToMap}
             className="px-8 py-3 text-base font-normal text-gray-800 bg-white border-2 border-gray-800 rounded-full cursor-pointer transition-all hover:bg-gray-50"
           >
-            Aggiungi e torna alla mappa
+            Torna alla mappa
           </button>
 
           <button
             onClick={handleViewApiary}
             className="px-8 py-3 text-base font-normal text-gray-800 bg-white border-2 border-gray-800 rounded-full cursor-pointer transition-all hover:bg-gray-50"
           >
-            Aggiungi e visualizza apiario
+            Visualizza apiario
           </button>
         </div>
       </div>

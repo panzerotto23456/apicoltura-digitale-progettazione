@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const MapScreen = ({ onAddApiary, apiaries }) => {
+const MapScreen = ({ onAddApiary, apiaries, onViewApiary }) => {
   const [selectedPosition, setSelectedPosition] = useState(null);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -84,9 +84,11 @@ const MapScreen = ({ onAddApiary, apiaries }) => {
         { icon: createCustomIcon(numHives) }
       ).addTo(mapInstanceRef.current);
 
-      // Aggiungi popup con informazioni
-      marker.bindPopup(`
-        <div style="font-family: sans-serif;">
+      // Crea popup con pulsante "Visualizza"
+      const popupContent = document.createElement('div');
+      popupContent.style.fontFamily = 'sans-serif';
+      popupContent.innerHTML = `
+        <div>
           <strong style="font-size: 16px;">${apiary.nome}</strong><br/>
           <span style="font-size: 14px;">Luogo: ${apiary.luogo}</span><br/>
           <span style="font-size: 14px;">Arnie: ${numHives}</span><br/>
@@ -94,8 +96,39 @@ const MapScreen = ({ onAddApiary, apiaries }) => {
             ${apiary.coordinates.lat.toFixed(4)}, ${apiary.coordinates.lng.toFixed(4)}
           </span>
         </div>
-      `);
+      `;
 
+      // Aggiungi pulsante "Visualizza"
+      const viewButton = document.createElement('button');
+      viewButton.textContent = 'Visualizza';
+      viewButton.style.cssText = `
+        margin-top: 10px;
+        width: 100%;
+        padding: 8px 16px;
+        background-color: #e69a4f;
+        color: #333;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      `;
+      
+      viewButton.onmouseover = () => {
+        viewButton.style.backgroundColor = '#d88a3f';
+      };
+      viewButton.onmouseout = () => {
+        viewButton.style.backgroundColor = '#e69a4f';
+      };
+      
+      viewButton.onclick = () => {
+        onViewApiary(apiary);
+      };
+
+      popupContent.appendChild(viewButton);
+
+      marker.bindPopup(popupContent);
       apiaryMarkersRef.current.push(marker);
     });
   };

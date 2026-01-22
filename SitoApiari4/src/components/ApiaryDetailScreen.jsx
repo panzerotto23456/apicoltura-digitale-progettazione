@@ -1,7 +1,7 @@
 import React from 'react';
-import { Scale, Droplets, Thermometer, AlertTriangle } from 'lucide-react';
+import { Scale, Droplets, Thermometer, AlertTriangle, Plus } from 'lucide-react';
 
-const ApiaryDetailScreen = ({ apiary, onBack }) => {
+const ApiaryDetailScreen = ({ apiary, onBack, onAddHive, onViewHive }) => {
   // Calcola le medie per i sensori
   const calculateAverages = () => {
     if (!apiary.hives || apiary.hives.length === 0) {
@@ -56,12 +56,10 @@ const ApiaryDetailScreen = ({ apiary, onBack }) => {
 
   // Determina lo stato dell'arnia (normale, attenzione, critica)
   const getHiveStatus = (hive) => {
-    // Logica semplificata: se i valori superano certe soglie, mostro attenzione o critico
     const pesoMax = parseFloat(hive.pesoMax) || 0;
     const umiditaMax = parseFloat(hive.umiditaMax) || 0;
     const temperaturaMax = parseFloat(hive.temperaturaMax) || 0;
 
-    // Esempio: temperatura > 38 è critico, > 36 è attenzione
     if (temperaturaMax > 38 || umiditaMax > 75) {
       return 'critica';
     } else if (temperaturaMax > 36 || umiditaMax > 70 || pesoMax > 50) {
@@ -94,13 +92,22 @@ const ApiaryDetailScreen = ({ apiary, onBack }) => {
   return (
     <div className="min-h-screen bg-[#fef8e8] px-6 py-8">
       {/* Header con bottone indietro */}
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <button
           onClick={onBack}
           className="flex items-center gap-2 px-6 py-2 text-base font-medium text-gray-800 bg-[#e69a4f] rounded-full hover:bg-[#d88a3f] transition-colors"
         >
           <span>←</span>
           <span>Torna alla Lista Apiari</span>
+        </button>
+
+        {/* Bottone Aggiungi Arnia */}
+        <button
+          onClick={() => onAddHive(apiary)}
+          className="flex items-center gap-2 px-6 py-2 text-base font-medium text-white bg-green-600 rounded-full hover:bg-green-700 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Aggiungi Arnia</span>
         </button>
       </div>
 
@@ -170,7 +177,8 @@ const ApiaryDetailScreen = ({ apiary, onBack }) => {
           return (
             <div
               key={hive.id}
-              className={`${bgColor} rounded-2xl p-4 border-2 ${borderColor} transition-all hover:shadow-lg`}
+              onClick={() => onViewHive(hive, index + 1, apiary.nome)}
+              className={`${bgColor} rounded-2xl p-4 border-2 ${borderColor} transition-all hover:shadow-lg cursor-pointer hover:scale-105`}
             >
               {/* Header arnia */}
               <div className="flex items-center justify-between mb-3">
@@ -220,7 +228,14 @@ const ApiaryDetailScreen = ({ apiary, onBack }) => {
       {/* Messaggio se non ci sono arnie */}
       {apiary.hives.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Nessuna arnia presente in questo apiario</p>
+          <p className="text-gray-500 text-lg mb-4">Nessuna arnia presente in questo apiario</p>
+          <button
+            onClick={() => onAddHive(apiary)}
+            className="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-green-600 rounded-full hover:bg-green-700 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Aggiungi la prima arnia</span>
+          </button>
         </div>
       )}
     </div>
