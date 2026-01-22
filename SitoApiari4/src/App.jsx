@@ -34,7 +34,7 @@ function App() {
   setLoadingApiaries(true);
   try {
     // Carica apiari
-    const apiariesResponse = await fetch('https://databaseclone2-bc78.restdb.io/rest/apiari', {
+    const apiariesResponse = await fetch('https://databasesagomato2316-f801.restdb.io/rest/apiari', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -43,13 +43,16 @@ function App() {
     });
 
     // Carica arnie
-    const hivesResponse = await fetch('https://databaseclone2-bc78.restdb.io/rest/arnie', {
+    const hivesResponse = await fetch('https://databasesagomato2316-f801.restdb.io/rest/arnie', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'x-apikey': apiKey
       }
     });
+
+    console.log('Response status apiari:', apiariesResponse.status);
+    console.log('Response status arnie:', hivesResponse.status);
 
     if (apiariesResponse.ok && hivesResponse.ok) {
       const apiariesData = await apiariesResponse.json();
@@ -58,14 +61,27 @@ function App() {
       console.log('=== DATI RICEVUTI DAL DATABASE ===');
       console.log('Numero di apiari:', apiariesData.length);
       console.log('Numero di arnie:', hivesData.length);
-      console.log('Apiari:', apiariesData);
-      console.log('Arnie:', hivesData);
+      console.log('Dati apiari:', apiariesData);
+      console.log('Dati arnie:', hivesData);
+      
+      // DEBUG: Verifica gli ID
+      apiariesData.forEach(apiary => {
+        console.log(`Apiario "${apiary.api_nome}" ha api_id: ${apiary.api_id}`);
+      });
+      
+      hivesData.forEach(hive => {
+        console.log(`Arnia con MAC ${hive.arn_MacAddress} ha arn_api_id: ${hive.arn_api_id}`);
+      });
       
       // Trasforma i dati per compatibilità con il resto dell'app
       const transformedApiaries = apiariesData.map(apiary => {
-        // Trova tutte le arnie associate a questo apiario
+        // IMPORTANTE: Confronta arn_api_id con api_id (NON con _id!)
         const apiaryHives = hivesData
-          .filter(hive => hive.arn_api_id === apiary._id)
+          .filter(hive => {
+            const match = hive.arn_api_id === apiary.api_id;
+            console.log(`Confronto: hive.arn_api_id (${hive.arn_api_id}) === apiary.api_id (${apiary.api_id}) = ${match}`);
+            return match;
+          })
           .map(hive => ({
             id: hive._id,
             pesoMax: hive.arn_pesoMax,
@@ -79,9 +95,10 @@ function App() {
             MacAddress: hive.arn_MacAddress
           }));
         
-        console.log(`Apiario ${apiary.api_nome}: ${apiaryHives.length} arnie`);
-        console.log('ID apiario:', apiary._id);
-        console.log('Arnie trovate:', apiaryHives);
+        console.log(`✅ Apiario "${apiary.api_nome}" (api_id: ${apiary.api_id}): ${apiaryHives.length} arnie trovate`);
+        if (apiaryHives.length > 0) {
+          console.log('   Arnie:', apiaryHives);
+        }
         
         const transformed = {
           ...apiary,
@@ -98,13 +115,20 @@ function App() {
         return transformed;
       });
       
-      console.log('=== APIARI TRASFORMATI ===');
+      console.log('=== APIARI TRASFORMATI (FINALE) ===');
       console.log('Numero:', transformedApiaries.length);
+      transformedApiaries.forEach(apiary => {
+        console.log(`"${apiary.nome}": ${apiary.hives.length} arnie`);
+      });
       console.log('Dati completi:', transformedApiaries);
       
       setApiaries(transformedApiaries);
     } else {
+      const apiariesError = await apiariesResponse.text();
+      const hivesError = await hivesResponse.text();
       console.error('Errore nel caricamento dei dati');
+      console.error('Errore apiari:', apiariesError);
+      console.error('Errore arnie:', hivesError);
       alert('Errore nel caricamento dei dati dal database');
     }
   } catch (error) {
