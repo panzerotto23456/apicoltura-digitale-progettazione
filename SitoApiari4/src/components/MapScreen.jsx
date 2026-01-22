@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const MapScreen = ({ onAddApiary, apiaries, onViewApiary }) => {
+const MapScreen = ({ onAddApiary, apiaries, onViewApiary, apiKey }) => {
   const [selectedPosition, setSelectedPosition] = useState(null);
+  const [loading, setLoading] = useState(true);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
@@ -78,9 +79,14 @@ const MapScreen = ({ onAddApiary, apiaries, onViewApiary }) => {
 
     // Aggiungi marker per ogni apiario
     apiaries.forEach(apiary => {
-      const numHives = apiary.hives.length;
+      const numHives = apiary.hives ? apiary.hives.length : 0;
+      const lat = apiary.api_lat || apiary.coordinates?.lat;
+      const lng = apiary.api_lon || apiary.coordinates?.lng;
+      
+      if (!lat || !lng) return;
+
       const marker = window.L.marker(
-        [apiary.coordinates.lat, apiary.coordinates.lng],
+        [lat, lng],
         { icon: createCustomIcon(numHives) }
       ).addTo(mapInstanceRef.current);
 
@@ -89,11 +95,11 @@ const MapScreen = ({ onAddApiary, apiaries, onViewApiary }) => {
       popupContent.style.fontFamily = 'sans-serif';
       popupContent.innerHTML = `
         <div>
-          <strong style="font-size: 16px;">${apiary.nome}</strong><br/>
-          <span style="font-size: 14px;">Luogo: ${apiary.luogo}</span><br/>
+          <strong style="font-size: 16px;">${apiary.api_nome || apiary.nome}</strong><br/>
+          <span style="font-size: 14px;">Luogo: ${apiary.api_luogo || apiary.luogo}</span><br/>
           <span style="font-size: 14px;">Arnie: ${numHives}</span><br/>
           <span style="font-size: 12px; color: #666;">
-            ${apiary.coordinates.lat.toFixed(4)}, ${apiary.coordinates.lng.toFixed(4)}
+            ${parseFloat(lat).toFixed(4)}, ${parseFloat(lng).toFixed(4)}
           </span>
         </div>
       `;
@@ -127,10 +133,11 @@ const MapScreen = ({ onAddApiary, apiaries, onViewApiary }) => {
       };
 
       popupContent.appendChild(viewButton);
-
       marker.bindPopup(popupContent);
       apiaryMarkersRef.current.push(marker);
     });
+
+    setLoading(false);
   };
 
   const initMap = () => {
@@ -184,6 +191,13 @@ const MapScreen = ({ onAddApiary, apiaries, onViewApiary }) => {
         className="w-full h-full"
         style={{ height: '100vh', width: '100%' }}
       />
+
+      {/* Indicatore di caricamento */}
+      {loading && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white px-6 py-3 rounded-full shadow-lg z-[1000]">
+          <p className="text-gray-800 font-medium">Caricamento apiari in corso...</p>
+        </div>
+      )}
 
       {/* Bottone "Aggiungi apiario" */}
       <div className="absolute bottom-0 left-0 right-0 bg-[#fef8e8] py-6 flex justify-center z-[1000]">

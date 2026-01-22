@@ -2,24 +2,46 @@ import React, { useState } from 'react';
 
 const LoginScreen = ({ onLogin }) => {
   const [apiKey, setApiKey] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (apiKey.trim() === '') {
       alert('Per favore, inserisci una API key');
       return;
     }
     
-    if (apiKey === 'admin') {
-      console.log('Login effettuato con successo');
-      onLogin();
-    } else {
-      alert('API key non valida. Riprova.');
-      setApiKey('');
+    setLoading(true);
+
+    try {
+      // Test della connessione al database con l'API key fornita
+      const response = await fetch('https://databaseclone2-bc78.restdb.io/rest/apiari', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-apikey': apiKey
+        }
+      });
+
+      if (response.ok) {
+        console.log('Login effettuato con successo');
+        // Salva l'API key per usarla nell'app
+        onLogin(apiKey);
+      } else if (response.status === 401 || response.status === 403) {
+        alert('API key non valida. Riprova.');
+        setApiKey('');
+      } else {
+        alert('Errore di connessione. Riprova più tardi.');
+      }
+    } catch (error) {
+      console.error('Errore durante il login:', error);
+      alert('Errore di connessione al database. Verifica la tua connessione internet.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !loading) {
       handleSubmit();
     }
   };
@@ -33,18 +55,20 @@ const LoginScreen = ({ onLogin }) => {
         
         <input
           type="password"
-          className="w-full max-w-96 px-5 py-4 text-base border-2 border-gray-800 rounded-full outline-none mb-6 bg-white focus:border-[#e69a4f] transition-colors"
+          className="w-full max-w-96 px-5 py-4 text-base border-2 border-gray-800 rounded-full outline-none mb-6 bg-white focus:border-[#e69a4f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder=""
+          placeholder="Inserisci API key"
+          disabled={loading}
         />
         
         <button 
-          className="px-16 py-3 text-lg font-medium text-gray-800 bg-[#e69a4f] rounded-full cursor-pointer transition-all hover:bg-[#d88a3f] hover:-translate-y-0.5 active:translate-y-0 mb-5"
+          className="px-16 py-3 text-lg font-medium text-gray-800 bg-[#e69a4f] rounded-full cursor-pointer transition-all hover:bg-[#d88a3f] hover:-translate-y-0.5 active:translate-y-0 mb-5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
           onClick={handleSubmit}
+          disabled={loading}
         >
-          Accedi
+          {loading ? 'Verifica in corso...' : 'Accedi'}
         </button>
         
         <p className="text-sm text-gray-600 text-center">

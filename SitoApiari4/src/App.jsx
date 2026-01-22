@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginScreen from './components/LoginScreen';
 import MapScreen from './components/MapScreen';
 import AddApiaryScreen from './components/AddApiaryScreen';
@@ -8,6 +8,7 @@ import HiveDetailScreen from './components/HiveDetailScreen';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
+  const [apiKey, setApiKey] = useState(null);
   const [selectedCoordinates, setSelectedCoordinates] = useState(null);
   const [currentApiary, setCurrentApiary] = useState(null);
   const [apiaries, setApiaries] = useState([]);
@@ -16,8 +17,56 @@ function App() {
   const [selectedHiveNumber, setSelectedHiveNumber] = useState(null);
   const [selectedApiaryName, setSelectedApiaryName] = useState(null);
   const [isAddingToExisting, setIsAddingToExisting] = useState(false);
+  const [loadingApiaries, setLoadingApiaries] = useState(false);
 
-  const handleLogin = () => {
+  // Carica gli apiari dal database quando l'utente fa il login
+  useEffect(() => {
+    if (apiKey && currentScreen === 'map') {
+      loadApiariesFromDB();
+    }
+  }, [apiKey, currentScreen]);
+
+  const loadApiariesFromDB = async () => {
+    setLoadingApiaries(true);
+    try {
+      const response = await fetch('https://dbarniadigitale-0abe.restdb.io/rest/apiari', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-apikey': apiKey
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Apiari caricati dal database:', data);
+        
+        // Trasforma i dati per compatibilità con il resto dell'app
+        const transformedApiaries = data.map(apiary => ({
+          ...apiary,
+          id: apiary._id,
+          hives: apiary.hives || [],
+          coordinates: {
+            lat: apiary.api_lat,
+            lng: apiary.api_lon
+          },
+          nome: apiary.api_nome,
+          luogo: apiary.api_luogo
+        }));
+        
+        setApiaries(transformedApiaries);
+      } else {
+        console.error('Errore nel caricamento degli apiari');
+      }
+    } catch (error) {
+      console.error('Errore durante il caricamento degli apiari:', error);
+    } finally {
+      setLoadingApiaries(false);
+    }
+  };
+
+  const handleLogin = (key) => {
+    setApiKey(key);
     setCurrentScreen('map');
   };
 
@@ -29,10 +78,14 @@ function App() {
   const handleApiaryCreated = (apiaryData) => {
     const newApiary = {
       ...apiaryData,
-      id: Date.now(),
+      id: apiaryData._id || apiaryData.id || Date.now(),
       hives: []
     };
     setCurrentApiary(newApiary);
+    
+    // Aggiungi l'apiario alla lista locale
+    setApiaries([...apiaries, newApiary]);
+    
     setIsAddingToExisting(false);
     setCurrentScreen('addHive');
   };
@@ -67,7 +120,7 @@ function App() {
 
   const handleViewApiary = (apiary) => {
     // Cerca l'apiario nella lista esistente
-    const existingApiary = apiaries.find(a => a.id === apiary.id);
+    const existingApiary = apiaries.find(a => a.id === apiary.id || a._id === apiary._id);
     
     if (existingApiary) {
       // Se esiste, usa quello aggiornato dalla lista
@@ -84,7 +137,7 @@ function App() {
 
   const handleAddHiveToApiary = (apiary) => {
     // Trova l'apiario più recente dalla lista
-    const currentApiaryInList = apiaries.find(a => a.id === apiary.id);
+    const currentApiaryInList = apiaries.find(a => a.id === apiary.id || a._id === apiary._id);
     setCurrentApiary(currentApiaryInList || apiary);
     setIsAddingToExisting(true);
     setCurrentScreen('addHive');
@@ -109,7 +162,7 @@ function App() {
   const handleBackToApiary = () => {
     if (isAddingToExisting) {
       // Se stiamo aggiungendo a un apiario esistente, torna al dettaglio
-      const updatedApiary = apiaries.find(a => a.id === currentApiary.id);
+      const updatedApiary = apiaries.find(a => a.id === currentApiary.id || a._id === currentApiary._id);
       if (updatedApiary) {
         setSelectedApiaryForView(updatedApiary);
       }
@@ -122,7 +175,7 @@ function App() {
 
   const handleBackToApiaryDetail = () => {
     // Aggiorna l'apiario selezionato con i dati più recenti
-    const updatedApiary = apiaries.find(a => a.id === selectedApiaryForView.id);
+    const updatedApiary = apiaries.find(a => a.id === selectedApiaryForView.id || a._id === selectedApiaryForView._id);
     if (updatedApiary) {
       setSelectedApiaryForView(updatedApiary);
     }
@@ -137,6 +190,7 @@ function App() {
       )}
       {currentScreen === 'map' && (
         <MapScreen 
+          apiKey={apiKey}
           onAddApiary={handleAddApiary}
           apiaries={apiaries}
           onViewApiary={handleViewApiary}
@@ -144,6 +198,7 @@ function App() {
       )}
       {currentScreen === 'addApiary' && (
         <AddApiaryScreen 
+          apiKey={apiKey}
           coordinates={selectedCoordinates} 
           onBack={handleBackToMap}
           onApiaryCreated={handleApiaryCreated}
