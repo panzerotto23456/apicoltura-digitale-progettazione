@@ -1,1 +1,1 @@
-export const API_BASE_URL = 'https://test47656454-7066.restdb.io/rest';
+export const API_BASE_URL = 'https://gegrge-702d.restdb.io/rest';

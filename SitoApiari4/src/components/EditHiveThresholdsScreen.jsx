@@ -88,7 +88,6 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
             body: JSON.stringify({
               sea_max: parseFloat(thresholds.pesoMax) || pesoSensor.sea_max,
               sea_min: parseFloat(thresholds.pesoMin) || pesoSensor.sea_min,
-              sea_timer: parseInt(thresholds.pesoTimer) || pesoSensor.sea_timer
             })
           })
         );
@@ -96,8 +95,6 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
 
       // Aggiorna sensore umidità
       if (umidSensor) {
-        console.log('test');
-        console.log(umidSensor.sea_id);
         updates.push(
           fetch(`${API_BASE_URL}/sensoriarnia/${umidSensor._id}`, {
             method: 'PATCH',
@@ -108,7 +105,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
             body: JSON.stringify({
               sea_max: parseFloat(thresholds.umiditaMax) || umidSensor.sea_max,
               sea_min: parseFloat(thresholds.umiditaMin) || umidSensor.sea_min,
-              sea_timer: parseInt(thresholds.umiditaTimer) || umidSensor.sea_timer
+
             })
           })
         );
@@ -116,8 +113,6 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
 
       // Aggiorna sensore temperatura
       if (tempSensor) {
-        console.log('test2');
-        console.log(tempSensor.sea_id);
         updates.push(
           fetch(`${API_BASE_URL}/sensoriarnia/${tempSensor._id}`, {
             method: 'PATCH',
@@ -128,7 +123,6 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
             body: JSON.stringify({
               sea_max: parseFloat(thresholds.temperaturaMax) || tempSensor.sea_max,
               sea_min: parseFloat(thresholds.temperaturaMin) || tempSensor.sea_min,
-              sea_timer: parseInt(thresholds.temperaturaTimer) || tempSensor.sea_timer
             })
           })
         );
@@ -196,14 +190,6 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
               disabled={saving}
               className="w-full px-4 py-3 text-sm border-2 border-gray-800 rounded-full outline-none bg-white focus:border-[#e69a4f] transition-colors placeholder-gray-400 disabled:opacity-50"
             />
-            <input
-              type="number"
-              placeholder="Timer (secondi)"
-              value={thresholds.pesoTimer}
-              onChange={(e) => handleInputChange('pesoTimer', e.target.value)}
-              disabled={saving}
-              className="w-full px-4 py-3 text-sm border-2 border-gray-800 rounded-full outline-none bg-white focus:border-[#e69a4f] transition-colors placeholder-gray-400 disabled:opacity-50"
-            />
           </div>
 
           {/* Umidità */}
@@ -224,14 +210,6 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
               placeholder="Soglia min (%)"
               value={thresholds.umiditaMin}
               onChange={(e) => handleInputChange('umiditaMin', e.target.value)}
-              disabled={saving}
-              className="w-full px-4 py-3 text-sm border-2 border-gray-800 rounded-full outline-none bg-white focus:border-[#e69a4f] transition-colors placeholder-gray-400 disabled:opacity-50"
-            />
-            <input
-              type="number"
-              placeholder="Timer (secondi)"
-              value={thresholds.umiditaTimer}
-              onChange={(e) => handleInputChange('umiditaTimer', e.target.value)}
               disabled={saving}
               className="w-full px-4 py-3 text-sm border-2 border-gray-800 rounded-full outline-none bg-white focus:border-[#e69a4f] transition-colors placeholder-gray-400 disabled:opacity-50"
             />
@@ -258,14 +236,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
               disabled={saving}
               className="w-full px-4 py-3 text-sm border-2 border-gray-800 rounded-full outline-none bg-white focus:border-[#e69a4f] transition-colors placeholder-gray-400 disabled:opacity-50"
             />
-            <input
-              type="number"
-              placeholder="Timer (secondi)"
-              value={thresholds.temperaturaTimer}
-              onChange={(e) => handleInputChange('temperaturaTimer', e.target.value)}
-              disabled={saving}
-              className="w-full px-4 py-3 text-sm border-2 border-gray-800 rounded-full outline-none bg-white focus:border-[#e69a4f] transition-colors placeholder-gray-400 disabled:opacity-50"
-            />
+
           </div>
         </div>
 
