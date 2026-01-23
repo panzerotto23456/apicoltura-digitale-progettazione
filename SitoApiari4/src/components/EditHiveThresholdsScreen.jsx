@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/config';
 
 const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey }) => {
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
   const loadSensors = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://gruppo4-60cd.restdb.io/rest/sensoriArnia', {
+      const response = await fetch(`${API_BASE_URL}/sensoriArnia`, {
         headers: { 'x-apikey': apiKey }
       });
       
@@ -78,7 +79,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
       // Aggiorna sensore peso
       if (pesoSensor) {
         updates.push(
-          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriarnia/${pesoSensor._id}`, {
+          fetch(`${API_BASE_URL}/sensoriarnia/${pesoSensor._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
       if (umidSensor) {
         console.log('test');
         updates.push(
-          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriarnia/0`, {
+          fetch(`${API_BASE_URL}/sensoriarnia/${umidSensor._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -117,7 +118,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
         //console.log(tempSensor.sea_id);
         //console.log(tempSensor._id);
         updates.push(
-          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriarnia/${tempSensor._id}`, {
+          fetch(`${API_BASE_URL}/sensoriarnia/${tempSensor._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
