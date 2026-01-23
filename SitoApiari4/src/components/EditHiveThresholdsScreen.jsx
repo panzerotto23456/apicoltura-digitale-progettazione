@@ -78,8 +78,8 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
       // Aggiorna sensore peso
       if (pesoSensor) {
         updates.push(
-          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriArnia/${pesoSensor._id}`, {
-            method: 'PUT',
+          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriarnia/${pesoSensor._id}`, {
+            method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
               'x-apikey': apiKey
@@ -95,9 +95,10 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
 
       // Aggiorna sensore umidità
       if (umidSensor) {
+        console.log('test');
         updates.push(
-          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriArnia/${umidSensor._id}`, {
-            method: 'PUT',
+          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriarnia/0`, {
+            method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
               'x-apikey': apiKey
@@ -113,9 +114,11 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
 
       // Aggiorna sensore temperatura
       if (tempSensor) {
+        //console.log(tempSensor.sea_id);
+        //console.log(tempSensor._id);
         updates.push(
-          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriArnia/${tempSensor._id}`, {
-            method: 'PUT',
+          fetch(`https://gruppo4-60cd.restdb.io/rest/sensoriarnia/${tempSensor._id}`, {
+            method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
               'x-apikey': apiKey
