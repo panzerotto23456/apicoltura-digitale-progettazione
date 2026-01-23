@@ -3,7 +3,6 @@ import LoginScreen from './components/LoginScreen';
 import MapScreen from './components/MapScreen';
 import ApiaryDetailScreen from './components/ApiaryDetailScreen';
 import HiveDetailScreen from './components/HiveDetailScreen';
-import { API_BASE_URL } from './config';
 import EditHiveThresholdsScreen from './components/EditHiveThresholdsScreen';
 
 function App() {
@@ -25,16 +24,16 @@ function App() {
     setLoadingApiaries(true);
     try {
       const [apiariesRes, hivesRes, sensorsRes, readingsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/apiari`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/apiari`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch(`${API_BASE_URL}/arnie`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/arnie`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch(`${API_BASE_URL}/sensoriarnia`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriarnia`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch(`${API_BASE_URL}/rilevazioni`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/rilevazioni`, {
           headers: { 'x-apikey': apiKey }
         })
       ]);

@@ -1,1 +1,0 @@
-export const API_BASE_URL = 'https://gegrge-702d.restdb.io/rest';

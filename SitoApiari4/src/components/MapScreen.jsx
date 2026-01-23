@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { API_BASE_URL } from '@/config';
 
 const MapScreen = ({ apiaries, onViewApiary, loadingApiaries }) => {
   const mapRef = useRef(null);

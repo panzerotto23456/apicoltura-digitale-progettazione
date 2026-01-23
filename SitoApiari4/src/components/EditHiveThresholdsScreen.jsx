@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '@/config';
 
 const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey }) => {
   const [loading, setLoading] = useState(true);
@@ -79,7 +78,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
       // Aggiorna sensore peso
       if (pesoSensor) {
         updates.push(
-          fetch(`${API_BASE_URL}/sensoriarnia/${pesoSensor._id}`, {
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriarnia/${pesoSensor._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -96,7 +95,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
       // Aggiorna sensore umidità
       if (umidSensor) {
         updates.push(
-          fetch(`${API_BASE_URL}/sensoriarnia/${umidSensor._id}`, {
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriarnia/${umidSensor._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -114,7 +113,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
       // Aggiorna sensore temperatura
       if (tempSensor) {
         updates.push(
-          fetch(`${API_BASE_URL}/sensoriarnia/${tempSensor._id}`, {
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriarnia/${tempSensor._id}`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',

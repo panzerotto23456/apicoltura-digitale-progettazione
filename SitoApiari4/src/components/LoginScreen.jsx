@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { API_BASE_URL } from '../config';
 
 const LoginScreen = ({ onLogin }) => {
   const [apiKey, setApiKey] = useState('');
@@ -15,7 +14,7 @@ const LoginScreen = ({ onLogin }) => {
 
     try {
       // Test della connessione al database con l'API key fornita
-      const response = await fetch(`${API_BASE_URL}/apiari`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/apiari`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

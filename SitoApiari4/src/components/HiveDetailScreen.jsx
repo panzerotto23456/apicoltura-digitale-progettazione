@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Scale, Droplets, Thermometer, ArrowLeft, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { API_BASE_URL } from '../config';
 
 const HiveDetailScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey }) => {
   const [viewMode, setViewMode] = useState('combinato');
@@ -16,10 +15,10 @@ const HiveDetailScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey }) => {
     setLoading(true);
     try {
       const [sensorsRes, readingsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/sensoriArnia`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriArnia`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch(`${API_BASE_URL}/rilevazioni`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/rilevazioni`, {
           headers: { 'x-apikey': apiKey }
         })
       ]);

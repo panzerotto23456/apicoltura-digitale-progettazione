@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { API_BASE_URL } from '../config';
 
 const AddHiveScreen = ({ apiary, onBack, onComplete, onViewApiary }) => {
   const [currentHive, setCurrentHive] = useState({
