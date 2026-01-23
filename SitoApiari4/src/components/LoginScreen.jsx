@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config';
 
 const LoginScreen = ({ onLogin }) => {
   const [apiKey, setApiKey] = useState('');
@@ -14,7 +15,7 @@ const LoginScreen = ({ onLogin }) => {
 
     try {
       // Test della connessione al database con l'API key fornita
-      const response = await fetch('https://databasesagomato2316-f801.restdb.io/rest/apiari', {
+      const response = await fetch(`${API_BASE_URL}/apiari`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Scale, Droplets, Thermometer, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 const ApiaryDetailScreen = ({ apiary, onBack, onViewHive }) => {
   // Calcola le medie usando i valori CORRENTI delle rilevazioni

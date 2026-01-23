@@ -1,0 +1,1 @@
+export const API_BASE_URL = 'test47656454-7066.restdb.io/rest';

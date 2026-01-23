@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '@/config';
 
 const MapScreen = ({ onAddApiary, apiaries, onViewApiary, apiKey, loadingApiaries }) => {
   const [selectedPosition, setSelectedPosition] = useState(null);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../config';
 
 const AddApiaryScreen = ({ coordinates, onBack, onApiaryCreated, apiKey }) => {
   const [luogo, setLuogo] = useState('');
@@ -25,7 +26,7 @@ const AddApiaryScreen = ({ coordinates, onBack, onApiaryCreated, apiKey }) => {
       };
 
       // Invia i dati al database
-      const response = await fetch('https://dbarniadigitale-0abe.restdb.io/rest/apiari', {
+      const response = await fetch(`${API_BASE_URL}/apiari`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

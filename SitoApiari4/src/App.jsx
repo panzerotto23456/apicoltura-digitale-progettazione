@@ -3,7 +3,8 @@ import LoginScreen from './components/LoginScreen';
 import MapScreen from './components/MapScreen';
 import ApiaryDetailScreen from './components/ApiaryDetailScreen';
 import HiveDetailScreen from './components/HiveDetailScreen';
-
+import { API_BASE_URL } from './config';
+  
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
   const [apiKey, setApiKey] = useState(null);
@@ -23,16 +24,16 @@ function App() {
     setLoadingApiaries(true);
     try {
       const [apiariesRes, hivesRes, sensorsRes, readingsRes] = await Promise.all([
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/apiari', {
+        fetch(`${API_BASE_URL}/apiari`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/arnie', {
+        fetch(`${API_BASE_URL}/arnie`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/sensoriArnia', {
+        fetch(`${API_BASE_URL}/sensoriArnia`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/rilevazioni', {
+        fetch(`${API_BASE_URL}/rilevazioni`, {
           headers: { 'x-apikey': apiKey }
         })
       ]);
