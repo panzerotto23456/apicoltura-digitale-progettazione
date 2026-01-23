@@ -14,7 +14,7 @@ const LoginScreen = ({ onLogin }) => {
 
     try {
       // Test della connessione al database con l'API key fornita
-      const response = await fetch('https://databasesagomato2316-f801.restdb.io/rest/apiari', {
+      const response = await fetch('https://gruppo4-60cd.restdb.io/rest/apiari', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

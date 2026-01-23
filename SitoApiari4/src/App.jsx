@@ -3,6 +3,7 @@ import LoginScreen from './components/LoginScreen';
 import MapScreen from './components/MapScreen';
 import ApiaryDetailScreen from './components/ApiaryDetailScreen';
 import HiveDetailScreen from './components/HiveDetailScreen';
+import EditHiveThresholdsScreen from './components/EditHiveThresholdsScreen';
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
@@ -23,16 +24,16 @@ function App() {
     setLoadingApiaries(true);
     try {
       const [apiariesRes, hivesRes, sensorsRes, readingsRes] = await Promise.all([
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/apiari', {
+        fetch('https://gruppo4-60cd.restdb.io/rest/apiari', {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/arnie', {
+        fetch('https://gruppo4-60cd.restdb.io/rest/arnie', {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/sensoriArnia', {
+        fetch('https://gruppo4-60cd.restdb.io/rest/sensoriArnia', {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/rilevazioni', {
+        fetch('https://gruppo4-60cd.restdb.io/rest/rilevazioni', {
           headers: { 'x-apikey': apiKey }
         })
       ]);
@@ -124,15 +125,23 @@ function App() {
     setCurrentScreen('hiveDetail');
   };
 
+  const handleEditHiveThresholds = (hive, hiveNumber, apiaryName) => {
+    setSelectedHive(hive);
+    setSelectedHiveNumber(hiveNumber);
+    setCurrentScreen('editHiveThresholds');
+  };
+
   const handleBackToMap = () => {
     setCurrentScreen('map');
     setSelectedApiary(null);
     setSelectedHive(null);
+    loadApiariesFromDB(); // Ricarica i dati dopo le modifiche
   };
 
   const handleBackToApiary = () => {
     setCurrentScreen('apiaryDetail');
     setSelectedHive(null);
+    loadApiariesFromDB(); // Ricarica i dati dopo le modifiche
   };
 
   return (
@@ -150,10 +159,20 @@ function App() {
           apiary={selectedApiary}
           onBack={handleBackToMap}
           onViewHive={handleViewHive}
+          onEditHiveThresholds={handleEditHiveThresholds}
         />
       )}
       {currentScreen === 'hiveDetail' && selectedHive && (
         <HiveDetailScreen
+          hive={selectedHive}
+          hiveNumber={selectedHiveNumber}
+          apiaryName={selectedApiary?.nome}
+          onBack={handleBackToApiary}
+          apiKey={apiKey}
+        />
+      )}
+      {currentScreen === 'editHiveThresholds' && selectedHive && (
+        <EditHiveThresholdsScreen
           hive={selectedHive}
           hiveNumber={selectedHiveNumber}
           apiaryName={selectedApiary?.nome}

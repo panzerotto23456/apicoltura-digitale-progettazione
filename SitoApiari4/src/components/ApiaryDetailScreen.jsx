@@ -1,7 +1,7 @@
 import React from 'react';
-import { Scale, Droplets, Thermometer, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Scale, Droplets, Thermometer, AlertTriangle, ArrowLeft, Settings } from 'lucide-react';
 
-const ApiaryDetailScreen = ({ apiary, onBack, onViewHive }) => {
+const ApiaryDetailScreen = ({ apiary, onBack, onViewHive, onEditHiveThresholds }) => {
   // Calcola le medie usando i valori CORRENTI delle rilevazioni
   const calculateAverages = () => {
     if (!apiary.hives || apiary.hives.length === 0) {
@@ -149,16 +149,30 @@ const ApiaryDetailScreen = ({ apiary, onBack, onViewHive }) => {
           return (
             <div
               key={hive.id}
-              onClick={() => onViewHive(hive, index + 1, apiary.nome)}
-              className={`${bgColor} rounded-2xl p-4 border-2 ${borderColor} hover:shadow-lg cursor-pointer transition-all hover:scale-105`}
+              className={`${bgColor} rounded-2xl p-4 border-2 ${borderColor} hover:shadow-lg transition-all relative group`}
             >
+              {/* Intestazione con titolo e icona modifica */}
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-gray-800">Arnia {index + 1}</h3>
-                {status !== 'normale' && (
-                  <AlertTriangle 
-                    className={`w-5 h-5 ${status === 'critica' ? 'text-red-500' : 'text-yellow-500'}`}
-                  />
-                )}
+                <h3 
+                  onClick={() => onViewHive(hive, index + 1, apiary.nome)}
+                  className="text-lg font-semibold text-gray-800 cursor-pointer hover:text-[#e69a4f]"
+                >
+                  Arnia {index + 1}
+                </h3>
+                <div className="flex items-center gap-2">
+                  {status !== 'normale' && (
+                    <AlertTriangle 
+                      className={`w-5 h-5 ${status === 'critica' ? 'text-red-500' : 'text-yellow-500'}`}
+                    />
+                  )}
+                  <button
+                    onClick={() => onEditHiveThresholds(hive, index + 1, apiary.nome)}
+                    className="p-1.5 rounded-full bg-white border border-gray-300 hover:bg-[#e69a4f] hover:border-[#e69a4f] transition-colors"
+                    title="Modifica soglie"
+                  >
+                    <Settings className="w-4 h-4 text-gray-600 hover:text-white" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">

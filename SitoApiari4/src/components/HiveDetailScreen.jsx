@@ -15,10 +15,10 @@ const HiveDetailScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey }) => {
     setLoading(true);
     try {
       const [sensorsRes, readingsRes] = await Promise.all([
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/sensoriArnia', {
+        fetch('https://gruppo4-60cd.restdb.io/rest/sensoriArnia', {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch('https://databasesagomato2316-f801.restdb.io/rest/rilevazioni', {
+        fetch('https://gruppo4-60cd.restdb.io/rest/rilevazioni', {
           headers: { 'x-apikey': apiKey }
         })
       ]);
