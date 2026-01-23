@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scale, Droplets, Thermometer, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Scale, Droplets, Thermometer, AlertTriangle, ArrowLeft, Settings } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
 const ApiaryDetailScreen = ({ apiary, onBack, onViewHive, onEditHiveThresholds }) => {

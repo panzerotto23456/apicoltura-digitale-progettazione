@@ -31,7 +31,7 @@ function App() {
         fetch(`${API_BASE_URL}/arnie`, {
           headers: { 'x-apikey': apiKey }
         }),
-        fetch(`${API_BASE_URL}/sensoriArnia`, {
+        fetch(`${API_BASE_URL}/sensoriarnia`, {
           headers: { 'x-apikey': apiKey }
         }),
         fetch(`${API_BASE_URL}/rilevazioni`, {

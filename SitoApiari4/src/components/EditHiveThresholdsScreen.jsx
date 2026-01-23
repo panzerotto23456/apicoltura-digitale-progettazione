@@ -97,6 +97,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
       // Aggiorna sensore umidità
       if (umidSensor) {
         console.log('test');
+        console.log(umidSensor.sea_id);
         updates.push(
           fetch(`${API_BASE_URL}/sensoriarnia/${umidSensor._id}`, {
             method: 'PATCH',
@@ -115,8 +116,8 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
 
       // Aggiorna sensore temperatura
       if (tempSensor) {
-        //console.log(tempSensor.sea_id);
-        //console.log(tempSensor._id);
+        console.log('test2');
+        console.log(tempSensor.sea_id);
         updates.push(
           fetch(`${API_BASE_URL}/sensoriarnia/${tempSensor._id}`, {
             method: 'PATCH',
