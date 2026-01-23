@@ -24,7 +24,7 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
   const loadSensors = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/sensoriArnia`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriArnia`, {
         headers: { 'x-apikey': apiKey }
       });
       
