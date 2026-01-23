@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '@/config';
 
-const MapScreen = ({ onAddApiary, apiaries, onViewApiary, apiKey, loadingApiaries }) => {
-  const [selectedPosition, setSelectedPosition] = useState(null);
+const MapScreen = ({ apiaries, onViewApiary, loadingApiaries }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const markerRef = useRef(null);
   const apiaryMarkersRef = useRef([]);
 
   console.log('=== RENDER MAPSCREEN ===');
@@ -251,21 +249,6 @@ const MapScreen = ({ onAddApiary, apiaries, onViewApiary, apiKey, loadingApiarie
       }).addTo(map);
       console.log('Tile layer aggiunto');
 
-      // Gestisci click sulla mappa
-      map.on('click', (e) => {
-        const { lat, lng } = e.latlng;
-        console.log('Click sulla mappa:', lat, lng);
-        setSelectedPosition({ lat, lng });
-
-        // Rimuovi marker precedente se esiste
-        if (markerRef.current) {
-          map.removeLayer(markerRef.current);
-        }
-
-        // Aggiungi nuovo marker per la selezione
-        markerRef.current = window.L.marker([lat, lng]).addTo(map);
-      });
-
       mapInstanceRef.current = map;
       console.log('Mappa salvata in ref');
 
@@ -279,14 +262,6 @@ const MapScreen = ({ onAddApiary, apiaries, onViewApiary, apiKey, loadingApiarie
     }
 
     console.log('=== FINE INIT MAP ===');
-  };
-
-  const handleAddApiaryClick = () => {
-    if (selectedPosition) {
-      onAddApiary(selectedPosition);
-    } else {
-      alert('Per favore, seleziona prima un punto sulla mappa');
-    }
   };
 
   return (
@@ -313,23 +288,6 @@ const MapScreen = ({ onAddApiary, apiaries, onViewApiary, apiKey, loadingApiarie
           </p>
         </div>
       )}
-
-      {/* Debug info */}
-      <div className="absolute top-4 right-4 bg-yellow-100 px-4 py-2 rounded-lg shadow-md z-[1000] text-xs">
-        <p>Apiari: {apiaries ? apiaries.length : 0}</p>
-        <p>Marker: {apiaryMarkersRef.current.length}</p>
-        <p>Loading: {loadingApiaries ? 'SI' : 'NO'}</p>
-      </div>
-
-      {/* Bottone "Aggiungi apiario" */}
-      <div className="absolute bottom-0 left-0 right-0 bg-[#fef8e8] py-6 flex justify-center z-[1000]">
-        <button
-          onClick={handleAddApiaryClick}
-          className="px-12 py-3 text-lg font-medium text-gray-800 bg-[#e69a4f] rounded-full cursor-pointer transition-all hover:bg-[#d88a3f] hover:-translate-y-0.5 active:translate-y-0"
-        >
-          Aggiungi apiario
-        </button>
-      </div>
     </div>
   );
 };

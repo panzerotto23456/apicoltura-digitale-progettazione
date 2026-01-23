@@ -4,7 +4,8 @@ import MapScreen from './components/MapScreen';
 import ApiaryDetailScreen from './components/ApiaryDetailScreen';
 import HiveDetailScreen from './components/HiveDetailScreen';
 import { API_BASE_URL } from './config';
-  
+import EditHiveThresholdsScreen from './components/EditHiveThresholdsScreen';
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState('login');
   const [apiKey, setApiKey] = useState(null);
@@ -125,15 +126,23 @@ function App() {
     setCurrentScreen('hiveDetail');
   };
 
+  const handleEditHiveThresholds = (hive, hiveNumber, apiaryName) => {
+    setSelectedHive(hive);
+    setSelectedHiveNumber(hiveNumber);
+    setCurrentScreen('editHiveThresholds');
+  };
+
   const handleBackToMap = () => {
     setCurrentScreen('map');
     setSelectedApiary(null);
     setSelectedHive(null);
+    loadApiariesFromDB(); // Ricarica i dati dopo le modifiche
   };
 
   const handleBackToApiary = () => {
     setCurrentScreen('apiaryDetail');
     setSelectedHive(null);
+    loadApiariesFromDB(); // Ricarica i dati dopo le modifiche
   };
 
   return (
@@ -151,10 +160,20 @@ function App() {
           apiary={selectedApiary}
           onBack={handleBackToMap}
           onViewHive={handleViewHive}
+          onEditHiveThresholds={handleEditHiveThresholds}
         />
       )}
       {currentScreen === 'hiveDetail' && selectedHive && (
         <HiveDetailScreen
+          hive={selectedHive}
+          hiveNumber={selectedHiveNumber}
+          apiaryName={selectedApiary?.nome}
+          onBack={handleBackToApiary}
+          apiKey={apiKey}
+        />
+      )}
+      {currentScreen === 'editHiveThresholds' && selectedHive && (
+        <EditHiveThresholdsScreen
           hive={selectedHive}
           hiveNumber={selectedHiveNumber}
           apiaryName={selectedApiary?.nome}
