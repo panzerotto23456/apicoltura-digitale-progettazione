@@ -69,14 +69,15 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
     setSaving(true);
     
     try {
-      const pesoSensor = sensors.find(s => s.sea_tip_id === 6);
-      const tempSensor = sensors.find(s => s.sea_tip_id === 11);
-      const umidSensor = sensors.find(s => s.sea_tip_id !== 6 && s.sea_tip_id !== 11);
+      const pesoSensor = sensors.find(s => s.sea_tip_id === 11);
+      const tempSensor = sensors.find(s => s.sea_tip_id === 12);
+      const umidSensor = sensors.find(s => s.sea_tip_id === 10);
 
       const updates = [];
 
       // Aggiorna sensore peso
       if (pesoSensor) {
+        console.log(pesoSensor._id);
         updates.push(
           fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriarnia/${pesoSensor._id}`, {
             method: 'PATCH',
