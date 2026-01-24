@@ -77,7 +77,6 @@ const EditHiveThresholdsScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey
 
       // Aggiorna sensore peso
       if (pesoSensor) {
-        console.log(pesoSensor._id);
         updates.push(
           fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriarnia/${pesoSensor._id}`, {
             method: 'PATCH',
