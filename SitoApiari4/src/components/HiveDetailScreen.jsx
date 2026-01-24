@@ -15,7 +15,7 @@ const HiveDetailScreen = ({ hive, hiveNumber, apiaryName, onBack, apiKey }) => {
     setLoading(true);
     try {
       const [sensorsRes, readingsRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriArnia`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/sensoriarnia`, {
           headers: { 'x-apikey': apiKey }
         }),
         fetch(`${import.meta.env.VITE_API_BASE_URL}/rilevazioni`, {
